@@ -193,6 +193,30 @@ class Call(PyTgCalls):
         )
         await assistant.change_stream(chat_id, stream)
 
+    async def set_call_volume(self, chat_id: int, volume: int):
+        """Set volume for the call (0-200)"""
+        assistant = await group_assistant(self, chat_id)
+        await assistant.change_volume_call(chat_id, volume)
+
+    async def get_call_participants(self, chat_id: int):
+        """Get list of participants in the group call"""
+        assistant = await group_assistant(self, chat_id)
+        try:
+            participants = await assistant.get_participants(chat_id)
+            return participants
+        except Exception as e:
+            LOGGER(__name__).error(f"Error getting participants: {e}")
+            return []
+
+    async def is_call_connected(self, chat_id: int):
+        """Check if the assistant is connected to a call"""
+        assistant = await group_assistant(self, chat_id)
+        try:
+            calls = await assistant.get_active_call(chat_id)
+            return calls is not None
+        except:
+            return False
+
     async def stream_call(self, link):
         assistant = await group_assistant(self, config.LOG_GROUP_ID)
         await assistant.join_group_call(
