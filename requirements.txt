@@ -12,7 +12,7 @@ motor
 pillow
 psutil
 pykeyboard
-py-tgcalls
+py-tgcalls==2.2.8
 kurigram
 python-dotenv
 pyyaml
