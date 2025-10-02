@@ -22,7 +22,7 @@ Best regards,
 <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
 
 ### Overview Section
-This Python-based bot, utilizing Pyrogram and Py-Tgcalls, enables effortless streaming of songs, videos, and live streams directly into group calls from various sources.
+This Python-based bot, utilizing Kurigram (Pyrogram) and Py-Tgcalls with latest API layers, enables effortless streaming of songs, videos, and live streams directly into group calls from various sources.
 
 ### Key Features
 
@@ -118,6 +118,8 @@ Enhance your group chat experience with seamless music and video streaming.
 ## **_Special thanks to_**
 **_[TeamYukki](https://github.com/TeamYukki)_** **_For Project Base_**
 
-**_[Py-tgcalls](https://github.com/pytgcalls)_** 
+**_[Py-tgcalls](https://github.com/pytgcalls)_** **_With Latest API Layer_**
+
+**_[Kurigram](https://github.com/KurimuzonAkuma/kurigram)_** **_Advanced Pyrogram Fork with Latest API Layer_**
 
 **_[Pyrogram](https://github.com/pyrogram)_**
