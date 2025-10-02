@@ -12,8 +12,8 @@ motor
 pillow
 psutil
 pykeyboard
-py-tgcalls==1.0.0
-kurigram==2.2.12
+py-tgcalls
+kurigram
 python-dotenv
 pyyaml
 requests
