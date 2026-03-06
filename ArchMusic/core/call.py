@@ -9,6 +9,7 @@
 #
 
 import asyncio
+import os
 from datetime import datetime, timedelta
 from typing import Union
 
@@ -192,6 +193,11 @@ class Call(PyTgCalls):
         try:
             userbot_client = await get_assistant(chat_id)
             thumb = track.get("thumb") or track.get("file")
+            if not thumb or not isinstance(thumb, str) or not thumb.strip():
+                return
+            # Only send if thumb is a URL or existing file path
+            if not (thumb.startswith("http://") or thumb.startswith("https://") or os.path.isfile(thumb)):
+                return
             title = track.get("title", "Unknown Track")
             by = track.get("by", "")
             try:
@@ -709,6 +715,8 @@ class Call(PyTgCalls):
 
         def _make_participants_handler(call_instance):
             async def handler(client, update):
+                if not isinstance(update, UpdatedGroupCallParticipant):
+                    return
                 chat_id = update.chat_id
                 users = counter.get(chat_id)
 
