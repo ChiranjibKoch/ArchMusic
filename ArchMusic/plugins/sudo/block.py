@@ -37,12 +37,12 @@ async def _resolve_user(message: Message):
 async def block_user(client, message: Message, _):
     user = await _resolve_user(message)
     if user is None:
-        return await message.reply_text(_["general_1"])
+        return await message.reply_text(_["general_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if user.id in BANNED_USERS:
-        return await message.reply_text(_["block_1"].format(user.mention))
+        return await message.reply_text(_["block_1"].format(user.mention), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     await add_gban_user(user.id)
     BANNED_USERS.add(user.id)
-    await message.reply_text(_["block_2"].format(user.mention))
+    await message.reply_text(_["block_2"].format(user.mention), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
 
 @app.on_message(filters.command(UNBLOCK_COMMAND) & SUDOERS)
@@ -50,20 +50,20 @@ async def block_user(client, message: Message, _):
 async def unblock_user(client, message: Message, _):
     user = await _resolve_user(message)
     if user is None:
-        return await message.reply_text(_["general_1"])
+        return await message.reply_text(_["general_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if user.id not in BANNED_USERS:
-        return await message.reply_text(_["block_3"])
+        return await message.reply_text(_["block_3"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     await remove_gban_user(user.id)
     BANNED_USERS.discard(user.id)
-    await message.reply_text(_["block_4"])
+    await message.reply_text(_["block_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
 
 @app.on_message(filters.command(BLOCKED_COMMAND) & SUDOERS)
 @language
 async def blocked_users_list(client, message: Message, _):
     if not BANNED_USERS:
-        return await message.reply_text(_["block_5"])
-    mystic = await message.reply_text(_["block_6"])
+        return await message.reply_text(_["block_5"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
+    mystic = await message.reply_text(_["block_6"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     msg = _["block_7"]
     count = 0
     for user_id in BANNED_USERS:

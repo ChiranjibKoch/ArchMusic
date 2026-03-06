@@ -21,7 +21,7 @@ from pyrogram.errors import (
 )
 from pyrogram.types import InlineKeyboardMarkup
 
-from pytgcalls import PyTgCalls
+from pytgcalls import PyTgCalls, filters as pytgcalls_filters
 from pytgcalls.exceptions import (
     NoActiveGroupCall,
     NoAudioSourceFound,
@@ -31,6 +31,8 @@ from pytgcalls.exceptions import (
 )
 from ntgcalls import TelegramServerError
 from pytgcalls.types import (
+    ChatUpdate,
+    GroupCallParticipant,
     UpdatedGroupCallParticipant,
     MediaStream,
     Update,
@@ -62,6 +64,12 @@ from ArchMusic.utils.inline.play import stream_markup, telegram_markup
 from ArchMusic.utils.stream.autoclear import auto_clean
 from ArchMusic.utils.thumbnails import gen_thumb
 
+try:
+    from pyrogram.enums import StoriesPrivacyRules as _StoriesPrivacyRules
+    _STORIES_AVAILABLE = True
+except ImportError:
+    _STORIES_AVAILABLE = False
+
 autoend = {}
 counter = {}
 AUTO_END_TIME = 3
@@ -82,7 +90,7 @@ def _build_stream(
 ) -> MediaStream:
     kwargs = {}
     if ffmpeg_params:
-        kwargs["additional_ffmpeg_parameters"] = ffmpeg_params
+        kwargs["ffmpeg_parameters"] = ffmpeg_params
 
     if video:
         return MediaStream(
@@ -175,6 +183,34 @@ class Call(PyTgCalls):
             await assistant.leave_call(chat_id)
         except Exception:
             pass
+
+    async def _send_now_playing_story(self, chat_id: int, track: dict):
+        if not config.STORY_FEATURE:
+            return
+        if not _STORIES_AVAILABLE:
+            return
+        try:
+            userbot_client = await get_assistant(chat_id)
+            thumb = track.get("thumb") or track.get("file")
+            title = track.get("title", "Unknown Track")
+            by = track.get("by", "")
+            try:
+                chat_info = await app.get_chat(chat_id)
+                chat_title = chat_info.title or str(chat_id)
+            except Exception:
+                chat_title = str(chat_id)
+            caption = f"🎵 {title}"
+            if by:
+                caption += f"\n👤 {by}"
+            caption += f"\n💬 {chat_title}"
+            await userbot_client.send_story(
+                photo=thumb,
+                caption=caption,
+                period=86400,
+                privacy=_StoriesPrivacyRules.PUBLIC,
+            )
+        except Exception as e:
+            LOGGER(__name__).debug(f"Story sending skipped for {chat_id}: {e}")
 
     async def skip_stream(
         self,
@@ -331,6 +367,10 @@ class Call(PyTgCalls):
             if users == 1:
                 autoend[chat_id] = datetime.now() + timedelta(minutes=AUTO_END_TIME)
 
+        track = db.get(chat_id, [{}])[0] if db.get(chat_id) else {}
+        if track:
+            asyncio.create_task(self._send_now_playing_story(chat_id, track))
+
 
     async def change_stream(self, client, chat_id):
         check = db.get(chat_id)
@@ -372,6 +412,7 @@ class Call(PyTgCalls):
         videoid = check[0]["vidid"]
         check[0]["played"] = 0
         is_video = str(streamtype) == "video"
+        asyncio.create_task(self._send_now_playing_story(chat_id, check[0]))
 
         if "live_" in queued:
             n, link = await YouTube.video(videoid, True)
@@ -509,7 +550,7 @@ class Call(PyTgCalls):
         pings = []
         for client, string_attr in self._clients:
             if getattr(config, string_attr, None):
-                pings.append(await client.ping)
+                pings.append(client.ping)
         if not pings:
             return "0"
         return str(round(sum(pings) / len(pings), 3))
@@ -605,7 +646,7 @@ class Call(PyTgCalls):
         for client, string_attr in self._clients:
             if getattr(config, string_attr, None):
                 try:
-                    result[string_attr] = str(round(await client.ping, 3))
+                    result[string_attr] = str(round(client.ping, 3))
                 except Exception:
                     result[string_attr] = "N/A"
         return result
@@ -637,45 +678,37 @@ class Call(PyTgCalls):
             except Exception:
                 pass
 
-
     async def decorators(self):
+        from pyrogram import filters as pyrogram_filters
+        from pyrogram.handlers import MessageHandler
+        from pyrogram.types import PhoneCallStarted, PhoneCallEnded
 
-        for instance in self._all_clients:
+        def _make_chat_update_handler(call_instance):
+            async def handler(_, update):
+                await call_instance.stop_stream(update.chat_id)
+            return handler
 
-            @instance.on_kicked()
-            @instance.on_closed_voice_chat()
-            @instance.on_left()
-            async def stream_services_handler(_, chat_id: int):
-                await self.stop_stream(chat_id)
-
-            @instance.on_stream_end()
-            async def stream_end_handler(client, update: Update):
-                if not isinstance(update, StreamEnded):
-                    return
-                await self.change_stream(client, update.chat_id)
-
-
-            @instance.on_error()
-            async def stream_error_handler(client, update: Update):
-                chat_id = getattr(update, "chat_id", None)
-                if not chat_id:
-                    return
+        def _make_busy_call_handler(call_instance):
+            async def handler(_, update):
                 LOGGER(__name__).warning(
-                    f"Stream error in chat {chat_id}: {update}. Attempting reconnect."
+                    f"Voice chat busy (BUSY_CALL) in {update.chat_id}. "
+                    "Another call is in progress; will retry after delay."
                 )
+                await asyncio.sleep(5)
                 try:
-                    await self.reconnect(chat_id)
-                except Exception as e:
-                    LOGGER(__name__).error(
-                        f"Reconnect failed for {chat_id}: {e}. Stopping stream."
-                    )
-                    await self.stop_stream(chat_id)
+                    await call_instance.stop_stream(update.chat_id)
+                except Exception:
+                    pass
+            return handler
 
-            @instance.on_participants_change()
-            async def participants_change_handler(client, update: Update):
-                if not isinstance(update, UpdatedGroupCallParticipant):
-                    return
+        def _make_stream_end_handler(call_instance):
+            async def handler(client, update):
+                if isinstance(update, StreamEnded):
+                    await call_instance.change_stream(client, update.chat_id)
+            return handler
 
+        def _make_participants_handler(call_instance):
+            async def handler(client, update):
                 chat_id = update.chat_id
                 users = counter.get(chat_id)
 
@@ -694,7 +727,7 @@ class Call(PyTgCalls):
                 else:
                     final = (
                         users + 1
-                        if update.participant.action == UpdatedGroupCallParticipant.Action.JOINED
+                        if update.action == GroupCallParticipant.Action.JOINED
                         else users - 1
                     )
                     counter[chat_id] = final
@@ -704,6 +737,73 @@ class Call(PyTgCalls):
                         )
                     else:
                         autoend[chat_id] = {}
+            return handler
+
+        def _make_phone_call_handler(call_instance, pytgcalls_instance, pause: bool):
+            async def handler(pyrogram_client, message):
+                action = getattr(message, "action", None)
+                if pause and not isinstance(action, PhoneCallStarted):
+                    return
+                if not pause and not isinstance(action, PhoneCallEnded):
+                    return
+                active_ids = await call_instance.get_active_call_ids()
+                for chat_id in active_ids:
+                    try:
+                        assistant = await group_assistant(call_instance, chat_id)
+                        if assistant is pytgcalls_instance:
+                            if pause:
+                                await call_instance.pause_stream(chat_id)
+                                LOGGER(__name__).info(
+                                    f"Paused stream in {chat_id} due to phone call on assistant."
+                                )
+                            else:
+                                await call_instance.resume_stream(chat_id)
+                                LOGGER(__name__).info(
+                                    f"Resumed stream in {chat_id} after phone call ended."
+                                )
+                    except Exception as e:
+                        LOGGER(__name__).debug(f"Phone call handler error for {chat_id}: {e}")
+            return handler
+
+        for instance in self._all_clients:
+            instance.add_handler(
+                _make_chat_update_handler(self),
+                pytgcalls_filters.chat_update(ChatUpdate.Status.KICKED),
+            )
+            instance.add_handler(
+                _make_chat_update_handler(self),
+                pytgcalls_filters.chat_update(ChatUpdate.Status.LEFT_GROUP),
+            )
+            instance.add_handler(
+                _make_chat_update_handler(self),
+                pytgcalls_filters.chat_update(ChatUpdate.Status.CLOSED_VOICE_CHAT),
+            )
+            instance.add_handler(
+                _make_busy_call_handler(self),
+                pytgcalls_filters.chat_update(ChatUpdate.Status.BUSY_CALL),
+            )
+            instance.add_handler(
+                _make_stream_end_handler(self),
+                pytgcalls_filters.stream_end(),
+            )
+            instance.add_handler(
+                _make_participants_handler(self),
+                pytgcalls_filters.call_participant(),
+            )
+
+            pyrogram_client = instance.mtproto_client
+            pyrogram_client.add_handler(
+                MessageHandler(
+                    _make_phone_call_handler(self, instance, pause=True),
+                    pyrogram_filters.service & pyrogram_filters.private,
+                )
+            )
+            pyrogram_client.add_handler(
+                MessageHandler(
+                    _make_phone_call_handler(self, instance, pause=False),
+                    pyrogram_filters.service & pyrogram_filters.private,
+                )
+            )
 
 
 ArchMusic = Call()

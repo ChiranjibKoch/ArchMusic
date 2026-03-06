@@ -40,9 +40,9 @@ DELETEPLAYLIST_COMMAND = get_command("DELETEPLAYLIST_COMMAND")
 async def check_playlist(client, message: Message, _):
     _playlist = await get_playlist_names(message.from_user.id)
     if _playlist:
-        get = await message.reply_text(_["playlist_2"])
+        get = await message.reply_text(_["playlist_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
     else:
-        return await message.reply_text(_["playlist_3"])
+        return await message.reply_text(_["playlist_3"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
     msg = _["playlist_4"]
     count = 0
     for shikhar in _playlist:
@@ -62,7 +62,8 @@ async def check_playlist(client, message: Message, _):
     carbon = await Carbon.generate(car, randint(100, 10000000000))
     await get.delete()
     await message.reply_photo(
-        carbon, caption=_["playlist_15"].format(link)
+        carbon, caption=_["playlist_15"].format(link),
+        quote=True, message_thread_id=getattr(message, "message_thread_id", None),
     )
 
 
@@ -83,7 +84,7 @@ async def del_group_message(client, message: Message, _):
             ]
         ]
     )
-    await message.reply_text(_["playlist_6"], reply_markup=upl)
+    await message.reply_text(_["playlist_6"], reply_markup=upl, quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
 
 
 async def get_keyboard(_, user_id):
@@ -121,9 +122,9 @@ async def get_keyboard(_, user_id):
 async def del_plist_msg(client, message: Message, _):
     _playlist = await get_playlist_names(message.from_user.id)
     if _playlist:
-        get = await message.reply_text(_["playlist_2"])
+        get = await message.reply_text(_["playlist_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
     else:
-        return await message.reply_text(_["playlist_3"])
+        return await message.reply_text(_["playlist_3"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
     keyboard, count = await get_keyboard(_, message.from_user.id)
     await get.edit_text(
         _["playlist_7"].format(count), reply_markup=keyboard

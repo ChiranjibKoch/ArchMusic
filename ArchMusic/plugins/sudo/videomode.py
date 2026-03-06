@@ -25,13 +25,13 @@ VIDEOMODE_COMMAND = get_command("VIDEOMODE_COMMAND")
 async def video_load_mode(client, message: Message, _):
     usage = _["vidmode_1"]
     if len(message.command) != 2:
-        return await message.reply_text(usage)
+        return await message.reply_text(usage, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     state = message.text.split(None, 1)[1].strip().lower()
     if state == "download":
         await add_on(config.YTDOWNLOADER)
-        await message.reply_text(_["vidmode_2"])
+        await message.reply_text(_["vidmode_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     elif state == "m3u8":
         await add_off(config.YTDOWNLOADER)
-        await message.reply_text(_["vidmode_3"])
+        await message.reply_text(_["vidmode_3"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     else:
-        await message.reply_text(usage)
+        await message.reply_text(usage, quote=True, message_thread_id=getattr(message, "message_thread_id", None))

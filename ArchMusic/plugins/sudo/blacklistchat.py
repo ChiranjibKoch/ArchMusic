@@ -26,17 +26,17 @@ BLACKLISTEDCHAT_COMMAND = get_command("BLACKLISTEDCHAT_COMMAND")
 @language
 async def blacklist_chat_func(client, message: Message, _):
     if len(message.command) != 2:
-        return await message.reply_text(_["black_1"])
+        return await message.reply_text(_["black_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     try:
         chat_id = int(message.text.strip().split()[1])
     except ValueError:
-        return await message.reply_text(_["black_1"])
+        return await message.reply_text(_["black_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if chat_id in await blacklisted_chats():
-        return await message.reply_text(_["black_2"])
+        return await message.reply_text(_["black_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if await blacklist_chat(chat_id):
-        await message.reply_text(_["black_3"])
+        await message.reply_text(_["black_3"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     else:
-        await message.reply_text("Something went wrong.")
+        await message.reply_text("Something went wrong.", quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     try:
         await app.leave_chat(chat_id)
     except Exception:
@@ -47,16 +47,16 @@ async def blacklist_chat_func(client, message: Message, _):
 @language
 async def whitelist_chat_func(client, message: Message, _):
     if len(message.command) != 2:
-        return await message.reply_text(_["black_4"])
+        return await message.reply_text(_["black_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     try:
         chat_id = int(message.text.strip().split()[1])
     except ValueError:
-        return await message.reply_text(_["black_4"])
+        return await message.reply_text(_["black_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if chat_id not in await blacklisted_chats():
-        return await message.reply_text(_["black_5"])
+        return await message.reply_text(_["black_5"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if await whitelist_chat(chat_id):
-        return await message.reply_text(_["black_6"])
-    await message.reply_text("Something went wrong.")
+        return await message.reply_text(_["black_6"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
+    await message.reply_text("Something went wrong.", quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
 
 @app.on_message(filters.command(BLACKLISTEDCHAT_COMMAND) & ~BANNED_USERS)
@@ -64,7 +64,7 @@ async def whitelist_chat_func(client, message: Message, _):
 async def all_blacklisted_chats(client, message: Message, _):
     chats = await blacklisted_chats()
     if not chats:
-        return await message.reply_text(_["black_8"])
+        return await message.reply_text(_["black_8"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     text = _["black_7"]
     for count, chat_id in enumerate(chats, 1):
         try:
@@ -72,4 +72,4 @@ async def all_blacklisted_chats(client, message: Message, _):
         except Exception:
             title = "Private"
         text += f"**{count}. {title}** [`{chat_id}`]\n"
-    await message.reply_text(text)
+    await message.reply_text(text, quote=True, message_thread_id=getattr(message, "message_thread_id", None))

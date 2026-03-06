@@ -42,11 +42,11 @@ async def _play_next(message: Message, _, chat_id: int):
     if "live_" in queued:
         n, link = await YouTube.video(videoid, True)
         if n == 0:
-            return await message.reply_text(_["admin_11"].format(title))
+            return await message.reply_text(_["admin_11"].format(title), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         try:
             await ArchMusic.skip_stream(chat_id, link, video=status)
         except Exception:
-            return await message.reply_text(_["call_9"])
+            return await message.reply_text(_["call_9"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         button = telegram_markup(_, chat_id)
         img = await gen_thumb(videoid)
         run = await message.reply_photo(
@@ -55,12 +55,13 @@ async def _play_next(message: Message, _, chat_id: int):
                 user, f"https://t.me/{app.username}?start=info_{videoid}"
             ),
             reply_markup=InlineKeyboardMarkup(button),
+            quote=True, message_thread_id=getattr(message, "message_thread_id", None),
         )
         db[chat_id][0]["mystic"] = run
         db[chat_id][0]["markup"] = "tg"
 
     elif "vid_" in queued:
-        mystic = await message.reply_text(_["call_10"], disable_web_page_preview=True)
+        mystic = await message.reply_text(_["call_10"], disable_web_page_preview=True, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         try:
             file_path, direct = await YouTube.download(
                 videoid, mystic, videoid=True, video=status
@@ -79,6 +80,7 @@ async def _play_next(message: Message, _, chat_id: int):
                 user, f"https://t.me/{app.username}?start=info_{videoid}"
             ),
             reply_markup=InlineKeyboardMarkup(button),
+            quote=True, message_thread_id=getattr(message, "message_thread_id", None),
         )
         db[chat_id][0]["mystic"] = run
         db[chat_id][0]["markup"] = "stream"
@@ -88,12 +90,13 @@ async def _play_next(message: Message, _, chat_id: int):
         try:
             await ArchMusic.skip_stream(chat_id, videoid, video=status)
         except Exception:
-            return await message.reply_text(_["call_9"])
+            return await message.reply_text(_["call_9"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         button = telegram_markup(_, chat_id)
         run = await message.reply_photo(
             photo=config.STREAM_IMG_URL,
             caption=_["stream_2"].format(user),
             reply_markup=InlineKeyboardMarkup(button),
+            quote=True, message_thread_id=getattr(message, "message_thread_id", None),
         )
         db[chat_id][0]["mystic"] = run
         db[chat_id][0]["markup"] = "tg"
@@ -102,7 +105,7 @@ async def _play_next(message: Message, _, chat_id: int):
         try:
             await ArchMusic.skip_stream(chat_id, queued, video=status)
         except Exception:
-            return await message.reply_text(_["call_9"])
+            return await message.reply_text(_["call_9"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         if videoid in ("telegram", "soundcloud"):
             photo = (
                 config.SOUNCLOUD_IMG_URL
@@ -118,6 +121,7 @@ async def _play_next(message: Message, _, chat_id: int):
                 photo=photo,
                 caption=_["stream_3"].format(title, check[0]["dur"], user),
                 reply_markup=InlineKeyboardMarkup(button),
+                quote=True, message_thread_id=getattr(message, "message_thread_id", None),
             )
             db[chat_id][0]["mystic"] = run
             db[chat_id][0]["markup"] = "tg"
@@ -130,6 +134,7 @@ async def _play_next(message: Message, _, chat_id: int):
                     user, f"https://t.me/{app.username}?start=info_{videoid}"
                 ),
                 reply_markup=InlineKeyboardMarkup(button),
+                quote=True, message_thread_id=getattr(message, "message_thread_id", None),
             )
             db[chat_id][0]["mystic"] = run
             db[chat_id][0]["markup"] = "stream"
@@ -145,31 +150,32 @@ async def skip(cli, message: Message, _, chat_id):
     if len(message.command) >= 2:
         loop = await get_loop(chat_id)
         if loop != 0:
-            return await message.reply_text(_["admin_12"])
+            return await message.reply_text(_["admin_12"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         state = message.text.split(None, 1)[1].strip()
         if not state.isnumeric():
-            return await message.reply_text(_["admin_13"])
+            return await message.reply_text(_["admin_13"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         state = int(state)
         if not check:
-            return await message.reply_text(_["queue_2"])
+            return await message.reply_text(_["queue_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         count = len(check)
         if count <= 2:
-            return await message.reply_text(_["admin_14"])
+            return await message.reply_text(_["admin_14"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         max_skip = count - 1
         if not 1 <= state <= max_skip:
-            return await message.reply_text(_["admin_15"].format(max_skip))
+            return await message.reply_text(_["admin_15"].format(max_skip), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         for _ in range(state):
             popped = None
             try:
                 popped = check.pop(0)
             except Exception:
-                return await message.reply_text(_["admin_16"])
+                return await message.reply_text(_["admin_16"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
             if popped and config.AUTO_DOWNLOADS_CLEAR == str(True):
                 await auto_clean(popped)
             if not check:
                 try:
                     await message.reply_text(
-                        _["admin_10"].format(message.from_user.first_name)
+                        _["admin_10"].format(message.from_user.first_name),
+                        quote=True, message_thread_id=getattr(message, "message_thread_id", None),
                     )
                     await ArchMusic.stop_stream(chat_id)
                 except Exception:
@@ -182,7 +188,8 @@ async def skip(cli, message: Message, _, chat_id):
                 await auto_clean(popped)
             if not check:
                 await message.reply_text(
-                    _["admin_10"].format(message.from_user.first_name)
+                    _["admin_10"].format(message.from_user.first_name),
+                    quote=True, message_thread_id=getattr(message, "message_thread_id", None),
                 )
                 try:
                     return await ArchMusic.stop_stream(chat_id)
@@ -191,7 +198,8 @@ async def skip(cli, message: Message, _, chat_id):
         except Exception:
             try:
                 await message.reply_text(
-                    _["admin_10"].format(message.from_user.first_name)
+                    _["admin_10"].format(message.from_user.first_name),
+                    quote=True, message_thread_id=getattr(message, "message_thread_id", None),
                 )
                 return await ArchMusic.stop_stream(chat_id)
             except Exception:

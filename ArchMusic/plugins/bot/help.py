@@ -76,7 +76,8 @@ async def helper_private(
 async def help_com_group(client, message: Message, _):
     keyboard = private_help_panel(_)
     await message.reply_text(
-        _["help_2"], reply_markup=InlineKeyboardMarkup(keyboard)
+        _["help_2"], reply_markup=InlineKeyboardMarkup(keyboard),
+        quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
     )
 
 

@@ -58,13 +58,13 @@ async def _resolve_user(message: Message):
 async def auth(client, message: Message, _):
     user_id, user_name = await _resolve_user(message)
     if user_id is None:
-        return await message.reply_text(_["general_1"])
+        return await message.reply_text(_["general_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     existing = await get_authuser_names(message.chat.id)
     if len(existing) >= _AUTH_LIMIT:
-        return await message.reply_text(_["auth_1"])
+        return await message.reply_text(_["auth_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     token = await int_to_alpha(user_id)
     if token in existing:
-        return await message.reply_text(_["auth_3"])
+        return await message.reply_text(_["auth_3"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     assis = {
         "auth_user_id": user_id,
         "auth_name": user_name,
@@ -73,7 +73,7 @@ async def auth(client, message: Message, _):
     }
     _update_adminlist(message.chat.id, user_id, add=True)
     await save_authuser(message.chat.id, token, assis)
-    await message.reply_text(_["auth_2"])
+    await message.reply_text(_["auth_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
 
 @app.on_message(
@@ -83,14 +83,14 @@ async def auth(client, message: Message, _):
 async def unauthusers(client, message: Message, _):
     user_id, _ = await _resolve_user(message)
     if user_id is None:
-        return await message.reply_text(_["general_1"])
+        return await message.reply_text(_["general_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     token   = await int_to_alpha(user_id)
     deleted = await delete_authuser(message.chat.id, token)
     _update_adminlist(message.chat.id, user_id, add=False)
     if deleted:
-        await message.reply_text(_["auth_4"])
+        await message.reply_text(_["auth_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     else:
-        await message.reply_text(_["auth_5"])
+        await message.reply_text(_["auth_5"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
 
 @app.on_message(
@@ -100,8 +100,8 @@ async def unauthusers(client, message: Message, _):
 async def authusers(client, message: Message, _):
     names = await get_authuser_names(message.chat.id)
     if not names:
-        return await message.reply_text(_["setting_5"])
-    mystic = await message.reply_text(_["auth_6"])
+        return await message.reply_text(_["setting_5"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
+    mystic = await message.reply_text(_["auth_6"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     text   = _["auth_7"]
     j      = 0
     for token in names:
@@ -117,4 +117,4 @@ async def authusers(client, message: Message, _):
         text += f"{j}➤ {user.first_name}[`{user_id}`]\n"
         text += f"   {_['auth_8']} {admin_name}[`{admin_id}`]\n\n"
     await mystic.delete()
-    await message.reply_text(text)
+    await message.reply_text(text, quote=True, message_thread_id=getattr(message, "message_thread_id", None))

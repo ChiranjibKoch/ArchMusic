@@ -38,42 +38,42 @@ def _parse_chat_id(message: Message):
 @language
 async def authorize(client, message: Message, _):
     if not _PRIVATE_MODE:
-        return await message.reply_text(_["pbot_12"])
+        return await message.reply_text(_["pbot_12"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if len(message.command) != 2:
-        return await message.reply_text(_["pbot_1"])
+        return await message.reply_text(_["pbot_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     try:
         chat_id = _parse_chat_id(message)
     except (ValueError, IndexError):
-        return await message.reply_text(_["pbot_7"])
+        return await message.reply_text(_["pbot_7"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if await is_served_private_chat(chat_id):
-        return await message.reply_text(_["pbot_5"])
+        return await message.reply_text(_["pbot_5"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     await add_private_chat(chat_id)
-    await message.reply_text(_["pbot_3"])
+    await message.reply_text(_["pbot_3"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
 
 @app.on_message(filters.command(UNAUTHORIZE_COMMAND) & SUDOERS)
 @language
 async def unauthorize(client, message: Message, _):
     if not _PRIVATE_MODE:
-        return await message.reply_text(_["pbot_12"])
+        return await message.reply_text(_["pbot_12"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if len(message.command) != 2:
-        return await message.reply_text(_["pbot_2"])
+        return await message.reply_text(_["pbot_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     try:
         chat_id = _parse_chat_id(message)
     except (ValueError, IndexError):
-        return await message.reply_text(_["pbot_7"])
+        return await message.reply_text(_["pbot_7"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if not await is_served_private_chat(chat_id):
-        return await message.reply_text(_["pbot_6"])
+        return await message.reply_text(_["pbot_6"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     await remove_private_chat(chat_id)
-    await message.reply_text(_["pbot_4"])
+    await message.reply_text(_["pbot_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
 
 @app.on_message(filters.command(AUTHORIZED_COMMAND) & SUDOERS)
 @language
 async def authorized(client, message: Message, _):
     if not _PRIVATE_MODE:
-        return await message.reply_text(_["pbot_12"])
-    m = await message.reply_text(_["pbot_8"])
+        return await message.reply_text(_["pbot_12"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
+    m = await message.reply_text(_["pbot_8"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     chats = await get_private_served_chats()
     served_ids = [int(c["chat_id"]) for c in chats]
     if not served_ids:

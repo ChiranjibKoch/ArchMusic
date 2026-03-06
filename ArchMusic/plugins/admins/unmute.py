@@ -27,9 +27,9 @@ UNMUTE_COMMAND = get_command("UNMUTE_COMMAND")
 @AdminRightsCheck
 async def unmute_admin(cli, message: Message, _, chat_id):
     if len(message.command) != 1 or message.reply_to_message:
-        return await message.reply_text(_["general_2"])
+        return await message.reply_text(_["general_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if not await is_muted(chat_id):
-        return await message.reply_text(_["admin_7"])
+        return await message.reply_text(_["admin_7"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     await mute_off(chat_id)
     await ArchMusic.unmute_stream(chat_id)
-    await message.reply_text(_["admin_8"].format(message.from_user.mention))
+    await message.reply_text(_["admin_8"].format(message.from_user.mention), quote=True, message_thread_id=getattr(message, "message_thread_id", None))

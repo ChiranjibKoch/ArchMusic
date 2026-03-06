@@ -24,13 +24,13 @@ LOGGER_COMMAND = get_command("LOGGER_COMMAND")
 async def logger(client, message, _):
     usage = _["log_1"]
     if len(message.command) != 2:
-        return await message.reply_text(usage)
+        return await message.reply_text(usage, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     state = message.text.split(None, 1)[1].strip().lower()
     if state == "enable":
         await add_on(config.LOG)
-        await message.reply_text(_["log_2"])
+        await message.reply_text(_["log_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     elif state == "disable":
         await add_off(config.LOG)
-        await message.reply_text(_["log_3"])
+        await message.reply_text(_["log_3"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     else:
-        await message.reply_text(usage)
+        await message.reply_text(usage, quote=True, message_thread_id=getattr(message, "message_thread_id", None))

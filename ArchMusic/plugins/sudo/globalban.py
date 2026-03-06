@@ -54,20 +54,20 @@ async def _get_served_chat_ids() -> list:
 async def gban_user(client, message: Message, _):
     user_id, mention = await _resolve_user(message)
     if user_id is None:
-        return await message.reply_text(_["general_1"])
+        return await message.reply_text(_["general_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if user_id == message.from_user.id:
-        return await message.reply_text(_["gban_1"])
+        return await message.reply_text(_["gban_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if user_id == app.id:
-        return await message.reply_text(_["gban_2"])
+        return await message.reply_text(_["gban_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if user_id in SUDOERS:
-        return await message.reply_text(_["gban_3"])
+        return await message.reply_text(_["gban_3"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if await is_banned_user(user_id):
-        return await message.reply_text(_["gban_4"].format(mention))
+        return await message.reply_text(_["gban_4"].format(mention), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
     BANNED_USERS.add(user_id)
     served_chats = await _get_served_chat_ids()
     time_expected = get_readable_time(len(served_chats))
-    mystic = await message.reply_text(_["gban_5"].format(mention, time_expected))
+    mystic = await message.reply_text(_["gban_5"].format(mention, time_expected), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
     number_of_chats = 0
     for chat_id in served_chats:
@@ -80,7 +80,7 @@ async def gban_user(client, message: Message, _):
             pass
 
     await add_banned_user(user_id)
-    await message.reply_text(_["gban_6"].format(mention, number_of_chats))
+    await message.reply_text(_["gban_6"].format(mention, number_of_chats), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     await mystic.delete()
 
 
@@ -89,14 +89,14 @@ async def gban_user(client, message: Message, _):
 async def ungban_user(client, message: Message, _):
     user_id, mention = await _resolve_user(message)
     if user_id is None:
-        return await message.reply_text(_["general_1"])
+        return await message.reply_text(_["general_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if not await is_banned_user(user_id):
-        return await message.reply_text(_["gban_7"].format(mention))
+        return await message.reply_text(_["gban_7"].format(mention), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
     BANNED_USERS.discard(user_id)
     served_chats = await _get_served_chat_ids()
     time_expected = get_readable_time(len(served_chats))
-    mystic = await message.reply_text(_["gban_8"].format(mention, time_expected))
+    mystic = await message.reply_text(_["gban_8"].format(mention, time_expected), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
     number_of_chats = 0
     for chat_id in served_chats:
@@ -109,7 +109,7 @@ async def ungban_user(client, message: Message, _):
             pass
 
     await remove_banned_user(user_id)
-    await message.reply_text(_["gban_9"].format(mention, number_of_chats))
+    await message.reply_text(_["gban_9"].format(mention, number_of_chats), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     await mystic.delete()
 
 
@@ -118,8 +118,8 @@ async def ungban_user(client, message: Message, _):
 async def gbanned_list(client, message: Message, _):
     counts = await get_banned_count()
     if counts == 0:
-        return await message.reply_text(_["gban_10"])
-    mystic = await message.reply_text(_["gban_11"])
+        return await message.reply_text(_["gban_10"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
+    mystic = await message.reply_text(_["gban_11"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     msg = "Gbanned Users:\n\n"
     count = 0
     for user_id in await get_banned_users():

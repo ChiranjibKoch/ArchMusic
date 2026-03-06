@@ -28,18 +28,18 @@ SHUFFLE_COMMAND = get_command("SHUFFLE_COMMAND")
 @AdminRightsCheck
 async def shuffle_com(cli, message: Message, _, chat_id):
     if len(message.command) != 1:
-        return await message.reply_text(_["general_2"])
+        return await message.reply_text(_["general_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     check = db.get(chat_id)
     if not check:
-        return await message.reply_text(_["admin_21"])
+        return await message.reply_text(_["admin_21"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     try:
         popped = check.pop(0)
     except Exception:
-        return await message.reply_text(_["admin_22"])
+        return await message.reply_text(_["admin_22"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     check = db.get(chat_id)
     if not check:
         check.insert(0, popped)
-        return await message.reply_text(_["admin_22"])
+        return await message.reply_text(_["admin_22"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     random.shuffle(check)
     check.insert(0, popped)
-    await message.reply_text(_["admin_23"].format(message.from_user.first_name))
+    await message.reply_text(_["admin_23"].format(message.from_user.first_name), quote=True, message_thread_id=getattr(message, "message_thread_id", None))

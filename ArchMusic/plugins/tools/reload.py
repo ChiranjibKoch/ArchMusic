@@ -47,10 +47,11 @@ async def reload_admin_cache(client, message: Message, _):
         for user in authusers:
             user_id = await alpha_to_int(user)
             adminlist[chat_id].append(user_id)
-        await message.reply_text(_["admin_20"])
+        await message.reply_text(_["admin_20"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
     except:
         await message.reply_text(
-            "Failed to reload admincache. Make sure Bot is admin in your chat."
+            "Failed to reload admincache. Make sure Bot is admin in your chat.",
+            quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
         )
 
 
@@ -62,7 +63,8 @@ async def reload_admin_cache(client, message: Message, _):
 @AdminActual
 async def restartbot(client, message: Message, _):
     mystic = await message.reply_text(
-        f"Please Wait.. Restarting {MUSIC_BOT_NAME} for your chat.."
+        f"Please Wait.. Restarting {MUSIC_BOT_NAME} for your chat..",
+        quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
     )
     await asyncio.sleep(1)
     try:

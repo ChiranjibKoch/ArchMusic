@@ -31,6 +31,7 @@ async def _set_and_reply(chat_id: int, vol: int, message):
     await message.reply_text(
         f"🔊 Volume set to <b>{vol}%</b> for this chat.",
         parse_mode="html",
+        quote=True, message_thread_id=getattr(message, "message_thread_id", None),
     )
 
 
@@ -42,7 +43,7 @@ async def _set_and_reply(chat_id: int, vol: int, message):
 async def volume_command(_, message: Message, __):
     chat_id = message.chat.id
     if not await is_active_chat(chat_id):
-        return await message.reply_text("❌ No active stream in this chat.")
+        return await message.reply_text("❌ No active stream in this chat.", quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     args = message.command[1:]
     if not args:
         current = await get_volume(chat_id)
@@ -50,12 +51,14 @@ async def volume_command(_, message: Message, __):
             f"🔊 Current volume: <b>{current}%</b>\n"
             f"Usage: <code>/volume 1–{_VOL_MAX}</code>",
             parse_mode="html",
+            quote=True, message_thread_id=getattr(message, "message_thread_id", None),
         )
     try:
         vol = int(args[0])
     except ValueError:
         return await message.reply_text(
-            f"❌ Please provide a number between {_VOL_MIN} and {_VOL_MAX}."
+            f"❌ Please provide a number between {_VOL_MIN} and {_VOL_MAX}.",
+            quote=True, message_thread_id=getattr(message, "message_thread_id", None),
         )
     await _set_and_reply(chat_id, vol, message)
 

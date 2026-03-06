@@ -28,24 +28,26 @@ _LOOP_MAX = 10
 @AdminRightsCheck
 async def loop_com(cli, message: Message, _, chat_id):
     if len(message.command) != 2:
-        return await message.reply_text(_["admin_24"])
+        return await message.reply_text(_["admin_24"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     state = message.text.split(None, 1)[1].strip().lower()
     if state == "enable":
         await set_loop(chat_id, _LOOP_MAX)
         return await message.reply_text(
-            _["admin_25"].format(message.from_user.first_name, _LOOP_MAX)
+            _["admin_25"].format(message.from_user.first_name, _LOOP_MAX),
+            quote=True, message_thread_id=getattr(message, "message_thread_id", None),
         )
     if state == "disable":
         await set_loop(chat_id, 0)
-        return await message.reply_text(_["admin_27"])
+        return await message.reply_text(_["admin_27"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if state.isnumeric():
         n = int(state)
         if not 1 <= n <= _LOOP_MAX:
-            return await message.reply_text(_["admin_26"])
+            return await message.reply_text(_["admin_26"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         current = await get_loop(chat_id)
         total = min(current + n if current != 0 else n, _LOOP_MAX)
         await set_loop(chat_id, total)
         return await message.reply_text(
-            _["admin_25"].format(message.from_user.first_name, total)
+            _["admin_25"].format(message.from_user.first_name, total),
+            quote=True, message_thread_id=getattr(message, "message_thread_id", None),
         )
-    await message.reply_text(_["admin_24"])
+    await message.reply_text(_["admin_24"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
