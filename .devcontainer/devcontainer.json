@@ -1,0 +1,63 @@
+{
+  "name": "ArchMusic Dev",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "postCreateCommand": "pip install -r requirements.txt",
+  "remoteEnv": {
+    "API_ID": "${localEnv:API_ID}",
+    "API_HASH": "${localEnv:API_HASH}",
+    "BOT_TOKEN": "${localEnv:BOT_TOKEN}",
+    "MONGO_DB_URI": "${localEnv:MONGO_DB_URI}",
+    "LOG_GROUP_ID": "${localEnv:LOG_GROUP_ID}",
+    "MUSIC_BOT_NAME": "${localEnv:MUSIC_BOT_NAME}",
+    "STRING_SESSION": "${localEnv:STRING_SESSION}"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.debugpy",
+        "ms-python.isort",
+        "ms-python.black-formatter",
+        "njpwerner.autodocstring",
+        "streetsidesoftware.code-spell-checker",
+        "eamodio.gitlens",
+        "mhutchie.git-graph"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.formatting.provider": "black",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
+        "files.trimTrailingWhitespace": true,
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.linting.pylintArgs": [
+          "--disable=C0114,C0115,C0116,W0611"
+        ],
+        "python.analysis.typeCheckingMode": "basic",
+        "python.analysis.autoImportCompletions": true,
+        "python.analysis.extraPaths": [
+          "${workspaceFolder}"
+        ],
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.env.linux": {
+          "PYTHONPATH": "${workspaceFolder}"
+        }
+      }
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "containerEnv": {
+    "PYTHONUNBUFFERED": "1",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "postStartCommand": "echo '✅ ArchMusic Dev Environment Ready' && python --version && pip show kurigram py-tgcalls 2>/dev/null | grep -E 'Name|Version'",
+  "waitFor": "postCreateCommand"
+}
