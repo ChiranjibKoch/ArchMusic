@@ -11,9 +11,6 @@ import asyncio
 import importlib
 import sys
 
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
-
 from pyrogram import idle
 from pytgcalls.exceptions import NoActiveGroupCall
 
@@ -79,10 +76,15 @@ async def init():
 
 
 if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(init())
     except KeyboardInterrupt:
         pass
     finally:
         LOGGER("ArchMusic").info("Stopping Arch Music Bot! GoodBye")
+        try:
+            loop.run_until_complete(loop.shutdown_asyncgens())
+        except Exception:
+            pass
         loop.close()

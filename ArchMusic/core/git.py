@@ -26,9 +26,6 @@ from git.exc import GitCommandError, InvalidGitRepositoryError
 import config
 from ..logging import LOGGER
 
-loop = asyncio.get_event_loop_policy().get_event_loop()
-
-
 def _is_heroku() -> bool:
     return "heroku" in socket.getfqdn()
 
@@ -49,7 +46,7 @@ def install_req(cmd: str) -> Tuple[str, str, int, int]:
             process.pid,
         )
 
-    return loop.run_until_complete(install_requirements())
+    return asyncio.get_event_loop().run_until_complete(install_requirements())
 
 
 def git():
