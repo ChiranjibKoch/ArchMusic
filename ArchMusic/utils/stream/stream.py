@@ -25,7 +25,7 @@ from ArchMusic.utils.database import (
     is_video_allowed,
     music_on,
 )
-from ArchMusic.utils.exceptions import AssistantErr
+from ArchMusic.utils.exceptions import AgeRestrictedError, AssistantErr
 from ArchMusic.utils.formatters import time_to_seconds
 from ArchMusic.utils.inline.play import stream_markup, telegram_markup
 from ArchMusic.utils.inline.playlist import close_markup
@@ -135,6 +135,8 @@ async def stream(
                         file_path = await YouTube.audio_stream(vidid, videoid=True)
                         if not file_path:
                             raise AssistantErr(_["play_16"])
+                except AgeRestrictedError:
+                    raise AssistantErr(_["play_16"])
                 except AssistantErr:
                     raise
                 except Exception:
@@ -196,6 +198,8 @@ async def stream(
                 file_path = await YouTube.audio_stream(vidid, videoid=True)
                 if not file_path:
                     raise AssistantErr(_["play_16"])
+        except AgeRestrictedError:
+            raise AssistantErr(_["play_16"])
         except AssistantErr:
             raise
         except Exception:
