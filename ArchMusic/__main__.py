@@ -76,9 +76,15 @@ async def init():
 
 
 if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
     try:
-        asyncio.run(init())
+        loop.run_until_complete(init())
     except KeyboardInterrupt:
         pass
     finally:
         LOGGER("ArchMusic").info("Stopping Arch Music Bot! GoodBye")
+        try:
+            loop.run_until_complete(loop.shutdown_asyncgens())
+        except Exception:
+            pass
+        loop.close()
