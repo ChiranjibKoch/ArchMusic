@@ -14,6 +14,7 @@ import time
 from datetime import datetime, timedelta
 from typing import Union
 
+from pyrogram.errors import MessageIdInvalid, MessageNotModified
 from pyrogram.types import (InlineKeyboardButton,
                             InlineKeyboardMarkup, Voice)
 
@@ -25,6 +26,15 @@ from ..utils.formatters import (convert_bytes, get_readable_time,
                                 seconds_to_min)
 
 downloader = {}
+
+
+async def _safe_edit(mystic, text, **kwargs):
+    try:
+        await mystic.edit_text(text, **kwargs)
+    except (MessageIdInvalid, MessageNotModified):
+        pass
+    except Exception:
+        pass
 
 
 class TeleAPI:
@@ -61,7 +71,6 @@ class TeleAPI:
                     if audio
                     else "Telegram Video File"
                 )
-
         except:
             file_name = (
                 "Telegram Audio File"
@@ -156,10 +165,7 @@ class TeleAPI:
 
 **Speed:** {speed}/s
 **ETA:** {eta}"""
-                    try:
-                        await mystic.edit_text(text, reply_markup=upl)
-                    except:
-                        pass
+                    await _safe_edit(mystic, text, reply_markup=upl)
                     left_time[
                         message.id
                     ] = datetime.now() + timedelta(seconds=self.sleep)
@@ -173,12 +179,10 @@ class TeleAPI:
                     file_name=fname,
                     progress=progress,
                 )
-                await mystic.edit_text(
-                    "Successfully Downloaded.. Processing file now"
-                )
-                downloader.pop(message.id)
-            except:
-                await mystic.edit_text(_["tg_2"])
+                await _safe_edit(mystic, "Successfully Downloaded.. Processing file now")
+                downloader.pop(message.id, None)
+            except Exception:
+                await _safe_edit(mystic, _["tg_2"])
 
         if len(downloader) > 10:
             timers = []
@@ -189,7 +193,7 @@ class TeleAPI:
                 eta = get_readable_time(low)
             except:
                 eta = "Unknown"
-            await mystic.edit_text(_["tg_1"].format(eta))
+            await _safe_edit(mystic, _["tg_1"].format(eta))
             return False
 
         task = asyncio.create_task(down_load())
@@ -197,10 +201,11 @@ class TeleAPI:
         await task
         downloaded = downloader.get(message.id)
         if downloaded:
-            downloader.pop(message.id)
+            downloader.pop(message.id, None)
             return False
         verify = lyrical.get(mystic.id)
         if not verify:
             return False
         lyrical.pop(mystic.id)
         return True
+      
