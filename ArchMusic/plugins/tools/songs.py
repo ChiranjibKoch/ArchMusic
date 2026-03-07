@@ -178,7 +178,7 @@ async def song_download_cb(client, CallbackQuery, _):
     loop = asyncio.get_running_loop()
 
     def _extract_info():
-        with yt_dlp.YoutubeDL({"quiet": True}) as ytdl:
+        with yt_dlp.YoutubeDL({"quiet": True, "extractor_args": YouTube.extractor_args}) as ytdl:
             return ytdl.extract_info(yturl, download=False)
 
     x = await loop.run_in_executor(None, _extract_info)
@@ -199,6 +199,7 @@ async def song_download_cb(client, CallbackQuery, _):
                     "no_warnings": True,
                     "prefer_ffmpeg": True,
                     "merge_output_format": "mp4",
+                    "extractor_args": YouTube.extractor_args,
                 }
                 with yt_dlp.YoutubeDL(opts) as ydl:
                     ydl.download([yturl])
@@ -244,6 +245,7 @@ async def song_download_cb(client, CallbackQuery, _):
                             "preferredquality": "192",
                         }
                     ],
+                    "extractor_args": YouTube.extractor_args,
                 }
                 with yt_dlp.YoutubeDL(opts) as ydl:
                     ydl.download([yturl])
