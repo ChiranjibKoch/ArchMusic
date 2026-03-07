@@ -176,8 +176,12 @@ async def song_download_cb(client, CallbackQuery, _):
     mystic = await CallbackQuery.edit_message_text(_["song_8"])
     yturl = f"https://www.youtube.com/watch?v={vidid}"
     loop = asyncio.get_running_loop()
-    with yt_dlp.YoutubeDL({"quiet": True}) as ytdl:
-        x = ytdl.extract_info(yturl, download=False)
+
+    def _extract_info():
+        with yt_dlp.YoutubeDL({"quiet": True}) as ytdl:
+            return ytdl.extract_info(yturl, download=False)
+
+    x = await loop.run_in_executor(None, _extract_info)
     title = re.sub(r"\W+", " ", x["title"]).title()
     thumb_image_path = await CallbackQuery.message.download()
     duration = x["duration"]
