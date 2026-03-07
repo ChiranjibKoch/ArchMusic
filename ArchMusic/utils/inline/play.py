@@ -18,101 +18,114 @@ selection = [
     "▃▅▂▅▃▇▄▅▃",
 ]
 
+BAR_LENGTH = 15
+FILLED = "█"
+HALF = "▓"
+EMPTY = "░"
+
+
 def time_to_sec(time: str):
     x = time.split(":")
-
     if len(x) == 2:
         min = int(x[0])
         sec = int(x[1])
-
-        total_sec = (min*60) + sec
+        total_sec = (min * 60) + sec
     elif len(x) == 3:
         hour = int(x[0])
         min = int(x[1])
         sec = int(x[2])
-
-        total_sec = (hour*60*60) + (min*60) + sec
-
+        total_sec = (hour * 60 * 60) + (min * 60) + sec
+    else:
+        total_sec = 0
     return total_sec
+
+
+def build_progress_bar(played_sec, total_sec, length=BAR_LENGTH):
+    if total_sec == 0:
+        return EMPTY * length
+    ratio = played_sec / total_sec
+    filled_len = int(ratio * length)
+    remainder = (ratio * length) - filled_len
+    bar = FILLED * filled_len
+    if filled_len < length:
+        bar += HALF if remainder >= 0.5 else "⬤"
+        bar += EMPTY * (length - filled_len - 1)
+    return bar
+
 
 def stream_markup_timer(_, videoid, chat_id, played, dur):
     played_sec = time_to_sec(played)
     total_sec = time_to_sec(dur)
-
-    x, y = str(round(played_sec/total_sec,1)).split(".")
-    pos = int(y)
-
-    line = "─"
-    circle = "●"
-
-    bar = line*(pos-1)
-    bar += circle
-    bar += line*(10-len(bar))
+    bar = build_progress_bar(played_sec, total_sec)
+    percent = int((played_sec / total_sec) * 100) if total_sec else 0
 
     buttons = [
         [
             InlineKeyboardButton(
-                text=f"{played} {bar} {dur}",
+                text=f"⏱ {played} / {dur}",
                 callback_data="GetTimer",
             )
         ],
         [
             InlineKeyboardButton(
-                text="▷",
-                callback_data=f"ADMIN Resume|{chat_id}",
-            ),
-            InlineKeyboardButton(
-                text="II", callback_data=f"ADMIN Pause|{chat_id}"
-            ),
-            InlineKeyboardButton(
-                text="↻", callback_data=f"add_playlist {videoid}"
-            ),
-            InlineKeyboardButton(
-                text="‣‣", callback_data=f"ADMIN Skip|{chat_id}"
-            ),
-            InlineKeyboardButton(
-                text="▢", callback_data=f"ADMIN Stop|{chat_id}"
-            ), 
+                text=f"{bar} {percent}%",
+                callback_data="GetTimer",
+            )
+        ],
+        [
+            InlineKeyboardButton(text="⏮", callback_data=f"ADMIN 3|{chat_id}"),
+            InlineKeyboardButton(text="⏪", callback_data=f"ADMIN 1|{chat_id}"),
+            InlineKeyboardButton(text="⏸", callback_data=f"ADMIN Pause|{chat_id}"),
+            InlineKeyboardButton(text="⏩", callback_data=f"ADMIN 2|{chat_id}"),
+            InlineKeyboardButton(text="⏭", callback_data=f"ADMIN Skip|{chat_id}"),
+        ],
+        [
+            InlineKeyboardButton(text="▶️ Resume", callback_data=f"ADMIN Resume|{chat_id}"),
+            InlineKeyboardButton(text="⏹ Stop", callback_data=f"ADMIN Stop|{chat_id}"),
+        ],
+        [
+            InlineKeyboardButton(text="➕ Save", callback_data=f"add_playlist {videoid}"),
+            InlineKeyboardButton(text="🎛 CPanel", callback_data=f"PanelMarkup None|{chat_id}"),
         ],
     ]
     return buttons
 
 
 def telegram_markup_timer(_, chat_id, played, dur):
-    bar = random.choice(selection)
+    played_sec = time_to_sec(played)
+    total_sec = time_to_sec(dur)
+    bar = build_progress_bar(played_sec, total_sec)
+    percent = int((played_sec / total_sec) * 100) if total_sec else 0
+
     buttons = [
         [
             InlineKeyboardButton(
-                text=f"{played} {bar} {dur}",
+                text=f"⏱ {played} / {dur}",
                 callback_data="GetTimer",
             )
         ],
         [
             InlineKeyboardButton(
-                text="▷",
-                callback_data=f"ADMIN Resume|{chat_id}",
-            ),
-            InlineKeyboardButton(
-                text="II", callback_data=f"ADMIN Pause|{chat_id}"
-            ),
-            InlineKeyboardButton(
-                text="↻", callback_data=f"add_playlist {videoid}"
-            ),
-            InlineKeyboardButton(
-                text="‣‣", callback_data=f"ADMIN Skip|{chat_id}"
-            ),
-            InlineKeyboardButton(
-                text="▢", callback_data=f"ADMIN Stop|{chat_id}"
-            ),
+                text=f"{bar} {percent}%",
+                callback_data="GetTimer",
+            )
+        ],
+        [
+            InlineKeyboardButton(text="⏮", callback_data=f"ADMIN 3|{chat_id}"),
+            InlineKeyboardButton(text="⏪", callback_data=f"ADMIN 1|{chat_id}"),
+            InlineKeyboardButton(text="⏸", callback_data=f"ADMIN Pause|{chat_id}"),
+            InlineKeyboardButton(text="⏩", callback_data=f"ADMIN 2|{chat_id}"),
+            InlineKeyboardButton(text="⏭", callback_data=f"ADMIN Skip|{chat_id}"),
+        ],
+        [
+            InlineKeyboardButton(text="▶️ Resume", callback_data=f"ADMIN Resume|{chat_id}"),
+            InlineKeyboardButton(text="⏹ Stop", callback_data=f"ADMIN Stop|{chat_id}"),
+        ],
+        [
+            InlineKeyboardButton(text="🎛 CPanel", callback_data=f"PanelMarkup None|{chat_id}"),
         ],
     ]
     return buttons
-
-# Rest of the functions remain the same...
-
-
-
-## Inline without Timer Bar
 
 
 def stream_markup(_, videoid, chat_id):
@@ -128,7 +141,7 @@ def stream_markup(_, videoid, chat_id):
             ),
         ],
         [
-             InlineKeyboardButton(
+            InlineKeyboardButton(
                 text=_["CLOSEMENU_BUTTON"], callback_data="close"
             )
         ],
@@ -149,9 +162,6 @@ def telegram_markup(_, chat_id):
         ],
     ]
     return buttons
-
-
-## Search Query Inline
 
 
 def track_markup(_, videoid, user_id, channel, fplay):
@@ -198,9 +208,6 @@ def playlist_markup(_, videoid, user_id, ptype, channel, fplay):
     return buttons
 
 
-## Live Stream Markup
-
-
 def livestream_markup(_, videoid, user_id, mode, channel, fplay):
     buttons = [
         [
@@ -217,12 +224,7 @@ def livestream_markup(_, videoid, user_id, mode, channel, fplay):
     return buttons
 
 
-## Slider Query Markup
-
-
-def slider_markup(
-    _, videoid, user_id, query, query_type, channel, fplay
-):
+def slider_markup(_, videoid, user_id, query, query_type, channel, fplay):
     query = f"{query[:20]}"
     buttons = [
         [
@@ -251,9 +253,6 @@ def slider_markup(
         ],
     ]
     return buttons
-
-
-## Cpanel Markup
 
 
 def panel_markup_1(_, videoid, chat_id):
