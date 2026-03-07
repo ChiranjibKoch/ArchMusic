@@ -71,12 +71,14 @@ async def init():
 
     await ArchMusic.decorators()
     LOGGER("ArchMusic").info("Arch Music Bot Started Successfully")
+
     await idle()
 
 
 if __name__ == "__main__":
     try:
-        asyncio.run(init())
+        app.run(init())
     except KeyboardInterrupt:
         pass
-    LOGGER("ArchMusic").info("Stopping Arch Music Bot! GoodBye")
+    finally:
+        LOGGER("ArchMusic").info("Stopping Arch Music Bot! GoodBye")
