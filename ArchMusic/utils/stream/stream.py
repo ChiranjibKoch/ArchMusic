@@ -204,7 +204,7 @@ async def stream(
             await put_queue(
                 chat_id,
                 original_chat_id,
-                file_path,
+                f"vid_{vidid}",
                 title,
                 duration_min,
                 user_name,
