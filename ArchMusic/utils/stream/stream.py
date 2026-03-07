@@ -8,6 +8,7 @@
 # All rights reserved.
 #
 
+import asyncio
 import os
 from random import randint
 from typing import Union
@@ -25,11 +26,43 @@ from ArchMusic.utils.database import (
     music_on,
 )
 from ArchMusic.utils.exceptions import AssistantErr
+from ArchMusic.utils.formatters import time_to_seconds
 from ArchMusic.utils.inline.play import stream_markup, telegram_markup
 from ArchMusic.utils.inline.playlist import close_markup
 from ArchMusic.utils.pastebin import ArchMusicbin
 from ArchMusic.utils.stream.queue import put_queue, put_queue_index
 from ArchMusic.utils.thumbnails import gen_thumb, gen_qthumb
+
+_AUTO_QUEUE_LIMIT = 4
+
+
+async def _auto_queue(chat_id, original_chat_id, title, user_id, video):
+    try:
+        for query_type in range(1, _AUTO_QUEUE_LIMIT + 1):
+            try:
+                aq_title, aq_dur, _, aq_vidid = await YouTube.slider(title, query_type)
+            except Exception:
+                continue
+            if not aq_dur:
+                continue
+            try:
+                if int(time_to_seconds(aq_dur)) > config.DURATION_LIMIT:
+                    continue
+            except Exception:
+                continue
+            await put_queue(
+                chat_id,
+                original_chat_id,
+                f"vid_{aq_vidid}",
+                aq_title,
+                aq_dur,
+                "AutoQueue",
+                aq_vidid,
+                user_id,
+                "video" if video else "audio",
+            )
+    except Exception:
+        pass
 
 
 def _video_status(video):
@@ -217,6 +250,9 @@ async def stream(
             )
             db[chat_id][0]["mystic"] = run
             db[chat_id][0]["markup"] = "stream"
+            asyncio.create_task(
+                _auto_queue(chat_id, original_chat_id, title, user_id, video)
+            )
 
     elif streamtype == "soundcloud":
         file_path = result["filepath"]
