@@ -21,6 +21,8 @@ from pyrogram.types import Message
 from yt_dlp import YoutubeDL
 from youtubesearchpython.__future__ import VideosSearch
 
+from ArchMusic.logging import LOGGER
+from ArchMusic.utils.exceptions import AgeRestrictedError
 from ArchMusic.utils.formatters import time_to_seconds
 
 _COOKIES_FILE = "assets/cookies.txt"
@@ -58,12 +60,22 @@ async def shell_cmd(cmd):
     return out.decode("utf-8")
 
 
+_AGE_RESTRICTION_PHRASES = (
+    "sign in to confirm your age",
+    "age-restricted",
+    "age restricted",
+    "this video may be inappropriate for some users",
+)
+
+
 async def _cdn_url(link: str, fmt: str) -> str | None:
     args = [
         "yt-dlp", "-g",
         "-f", fmt,
         "--format-sort", "res,fps,tbr",
         "--no-playlist",
+        "--geo-bypass",
+        "--no-check-certificate",
     ]
     if os.path.isfile(_COOKIES_FILE):
         args += ["--cookies", _COOKIES_FILE]
@@ -73,11 +85,16 @@ async def _cdn_url(link: str, fmt: str) -> str | None:
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
-    stdout, _ = await proc.communicate()
+    stdout, stderr = await proc.communicate()
     if stdout:
         url = stdout.decode().strip().split("\n")[0]
         if url:
             return url
+    if stderr:
+        err_text = stderr.decode().strip()
+        LOGGER(__name__).warning("yt-dlp stream fetch failed for %s: %s", link, err_text)
+        if any(phrase in err_text.lower() for phrase in _AGE_RESTRICTION_PHRASES):
+            raise AgeRestrictedError(link)
     return None
 
 

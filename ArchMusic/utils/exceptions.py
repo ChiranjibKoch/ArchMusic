@@ -12,3 +12,8 @@
 class AssistantErr(Exception):
     def __init__(self, errr: str):
         super().__init__(errr)
+
+
+class AgeRestrictedError(Exception):
+    """Raised when a YouTube track is age-restricted and cannot be streamed."""
+    pass
