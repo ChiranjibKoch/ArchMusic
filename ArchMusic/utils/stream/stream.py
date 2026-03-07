@@ -29,54 +29,11 @@ from ArchMusic.utils.inline.play import stream_markup, telegram_markup
 from ArchMusic.utils.inline.playlist import close_markup
 from ArchMusic.utils.pastebin import ArchMusicbin
 from ArchMusic.utils.stream.queue import put_queue, put_queue_index
-from ArchMusic.utils.thumbnails import gen_thumb
-
-
-def _is_video(video) -> bool:
-    return bool(video)
+from ArchMusic.utils.thumbnails import gen_thumb, gen_qthumb
 
 
 def _video_status(video):
     return True if video else None
-
-
-async def _join_and_queue(
-    _,
-    mystic,
-    chat_id,
-    original_chat_id,
-    user_id,
-    user_name,
-    file_path,
-    title,
-    duration_min,
-    vidid,
-    streamtype,
-    video,
-    forceplay,
-    queue_fn=put_queue,
-    extra_queue_kwargs=None,
-):
-    if not forceplay:
-        db[chat_id] = []
-    await ArchMusic.join_call(
-        chat_id, original_chat_id, file_path, video=_video_status(video)
-    )
-    kw = dict(forceplay=forceplay)
-    if extra_queue_kwargs:
-        kw.update(extra_queue_kwargs)
-    await queue_fn(
-        chat_id,
-        original_chat_id,
-        file_path,
-        title,
-        duration_min,
-        user_name,
-        vidid,
-        user_id,
-        "video" if video else "audio",
-        **kw,
-    )
 
 
 async def stream(
@@ -119,9 +76,14 @@ async def stream(
                 continue
             if await is_active_chat(chat_id):
                 await put_queue(
-                    chat_id, original_chat_id,
-                    f"vid_{vidid}", title, duration_min,
-                    user_name, vidid, user_id,
+                    chat_id,
+                    original_chat_id,
+                    f"vid_{vidid}",
+                    title,
+                    duration_min,
+                    user_name,
+                    vidid,
+                    user_id,
                     "video" if video else "audio",
                 )
                 position = len(db.get(chat_id)) - 1
@@ -131,23 +93,35 @@ async def stream(
             else:
                 if not forceplay:
                     db[chat_id] = []
-                try:
-                    file_path, direct = await YouTube.download(
-                        vidid, mystic, video=_video_status(video), videoid=True
-                    )
-                except Exception:
-                    raise AssistantErr(_["play_16"])
+                meta = await YouTube.cdn_meta(vidid, videoid=True, video=bool(video))
+                if meta and meta.get("stream_url"):
+                    file_path = meta["stream_url"]
+                    direct = True
+                else:
+                    meta = {}
+                    try:
+                        file_path, direct = await YouTube.download(
+                            vidid, mystic, video=_video_status(video), videoid=True
+                        )
+                    except Exception:
+                        raise AssistantErr(_["play_16"])
+                queued_path = file_path if direct else f"vid_{vidid}"
                 await ArchMusic.join_call(
                     chat_id, original_chat_id, file_path, video=_video_status(video)
                 )
                 await put_queue(
-                    chat_id, original_chat_id,
-                    file_path if direct else f"vid_{vidid}",
-                    title, duration_min, user_name, vidid, user_id,
+                    chat_id,
+                    original_chat_id,
+                    queued_path,
+                    title,
+                    duration_min,
+                    user_name,
+                    vidid,
+                    user_id,
                     "video" if video else "audio",
                     forceplay=forceplay,
                 )
-                img = await gen_thumb(vidid)
+                img = await gen_thumb(vidid, prefetched=meta if meta else None)
                 button = stream_markup(_, vidid, chat_id)
                 run = await app.send_photo(
                     original_chat_id,
@@ -160,6 +134,9 @@ async def stream(
                 )
                 db[chat_id][0]["mystic"] = run
                 db[chat_id][0]["markup"] = "stream"
+                count += 1
+                msg += f"{count}- {title[:70]}\n"
+                msg += f"{_['playlist_17']} 0\n\n"
         if count == 0:
             return
         link = await ArchMusicbin(msg)
@@ -174,27 +151,42 @@ async def stream(
         )
 
     elif streamtype == "youtube":
-        link = result["link"]
         vidid = result["vidid"]
-        title = result["title"].title()
-        duration_min = result["duration_min"]
-        try:
-            file_path, direct = await YouTube.download(
-                vidid, mystic, videoid=True, video=_video_status(video)
-            )
-        except Exception:
-            raise AssistantErr(_["play_16"])
+        meta = await YouTube.cdn_meta(vidid, videoid=True, video=bool(video))
+        if meta and meta.get("stream_url"):
+            file_path = meta["stream_url"]
+            direct = True
+            title = meta.get("title", result.get("title", "Unknown")).title()
+            duration_min = meta.get("duration_min", result.get("duration_min", "Unknown"))
+        else:
+            meta = {}
+            title = result["title"].title()
+            duration_min = result["duration_min"]
+            try:
+                file_path, direct = await YouTube.download(
+                    vidid, mystic, videoid=True, video=_video_status(video)
+                )
+            except Exception:
+                raise AssistantErr(_["play_16"])
         queued_path = file_path if direct else f"vid_{vidid}"
         if await is_active_chat(chat_id):
             await put_queue(
-                chat_id, original_chat_id, queued_path,
-                title, duration_min, user_name, vidid, user_id,
+                chat_id,
+                original_chat_id,
+                queued_path,
+                title,
+                duration_min,
+                user_name,
+                vidid,
+                user_id,
                 "video" if video else "audio",
             )
             position = len(db.get(chat_id)) - 1
-            await app.send_message(
+            img = await gen_qthumb(vidid, prefetched=meta if meta else None)
+            await app.send_photo(
                 original_chat_id,
-                _["queue_4"].format(position, title[:30], duration_min, user_name),
+                photo=img,
+                caption=_["queue_4"].format(position, title[:30], duration_min, user_name),
             )
         else:
             if not forceplay:
@@ -203,12 +195,18 @@ async def stream(
                 chat_id, original_chat_id, file_path, video=_video_status(video)
             )
             await put_queue(
-                chat_id, original_chat_id, queued_path,
-                title, duration_min, user_name, vidid, user_id,
+                chat_id,
+                original_chat_id,
+                queued_path,
+                title,
+                duration_min,
+                user_name,
+                vidid,
+                user_id,
                 "video" if video else "audio",
                 forceplay=forceplay,
             )
-            img = await gen_thumb(vidid)
+            img = await gen_thumb(vidid, prefetched=meta if meta else None)
             button = stream_markup(_, vidid, chat_id)
             run = await app.send_photo(
                 original_chat_id,
@@ -228,8 +226,15 @@ async def stream(
         duration_min = result["duration_min"]
         if await is_active_chat(chat_id):
             await put_queue(
-                chat_id, original_chat_id, file_path,
-                title, duration_min, user_name, streamtype, user_id, "audio",
+                chat_id,
+                original_chat_id,
+                file_path,
+                title,
+                duration_min,
+                user_name,
+                streamtype,
+                user_id,
+                "audio",
             )
             position = len(db.get(chat_id)) - 1
             await app.send_message(
@@ -241,8 +246,15 @@ async def stream(
                 db[chat_id] = []
             await ArchMusic.join_call(chat_id, original_chat_id, file_path, video=None)
             await put_queue(
-                chat_id, original_chat_id, file_path,
-                title, duration_min, user_name, streamtype, user_id, "audio",
+                chat_id,
+                original_chat_id,
+                file_path,
+                title,
+                duration_min,
+                user_name,
+                streamtype,
+                user_id,
+                "audio",
                 forceplay=forceplay,
             )
             button = telegram_markup(_, chat_id)
@@ -262,8 +274,14 @@ async def stream(
         duration_min = result["dur"]
         if await is_active_chat(chat_id):
             await put_queue(
-                chat_id, original_chat_id, file_path,
-                title, duration_min, user_name, streamtype, user_id,
+                chat_id,
+                original_chat_id,
+                file_path,
+                title,
+                duration_min,
+                user_name,
+                streamtype,
+                user_id,
                 "video" if video else "audio",
             )
             position = len(db.get(chat_id)) - 1
@@ -278,8 +296,14 @@ async def stream(
                 chat_id, original_chat_id, file_path, video=_video_status(video)
             )
             await put_queue(
-                chat_id, original_chat_id, file_path,
-                title, duration_min, user_name, streamtype, user_id,
+                chat_id,
+                original_chat_id,
+                file_path,
+                title,
+                duration_min,
+                user_name,
+                streamtype,
+                user_id,
                 "video" if video else "audio",
                 forceplay=forceplay,
             )
@@ -302,9 +326,14 @@ async def stream(
         duration_min = "Live Track"
         if await is_active_chat(chat_id):
             await put_queue(
-                chat_id, original_chat_id,
-                f"live_{vidid}", title, duration_min,
-                user_name, vidid, user_id,
+                chat_id,
+                original_chat_id,
+                f"live_{vidid}",
+                title,
+                duration_min,
+                user_name,
+                vidid,
+                user_id,
                 "video" if video else "audio",
             )
             position = len(db.get(chat_id)) - 1
@@ -322,9 +351,14 @@ async def stream(
                 chat_id, original_chat_id, file_path, video=_video_status(video)
             )
             await put_queue(
-                chat_id, original_chat_id,
-                f"live_{vidid}", title, duration_min,
-                user_name, vidid, user_id,
+                chat_id,
+                original_chat_id,
+                f"live_{vidid}",
+                title,
+                duration_min,
+                user_name,
+                vidid,
+                user_id,
                 "video" if video else "audio",
                 forceplay=forceplay,
             )
@@ -348,9 +382,13 @@ async def stream(
         duration_min = "URL stream"
         if await is_active_chat(chat_id):
             await put_queue_index(
-                chat_id, original_chat_id,
-                "index_url", title, duration_min,
-                user_name, link,
+                chat_id,
+                original_chat_id,
+                "index_url",
+                title,
+                duration_min,
+                user_name,
+                link,
                 "video" if video else "audio",
             )
             position = len(db.get(chat_id)) - 1
@@ -364,9 +402,13 @@ async def stream(
                 chat_id, original_chat_id, link, video=_video_status(video)
             )
             await put_queue_index(
-                chat_id, original_chat_id,
-                "index_url", title, duration_min,
-                user_name, link,
+                chat_id,
+                original_chat_id,
+                "index_url",
+                title,
+                duration_min,
+                user_name,
+                link,
                 "video" if video else "audio",
                 forceplay=forceplay,
             )
