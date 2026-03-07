@@ -448,12 +448,14 @@ class Call(PyTgCalls):
         elif "vid_" in queued:
             mystic = await app.send_message(original_chat_id, _["call_10"])
             try:
-                file_path, direct = await YouTube.download(
-                    videoid,
-                    mystic,
-                    videoid=True,
-                    video=is_video,
-                )
+                if is_video:
+                    n, file_path = await YouTube.video(videoid, True)
+                    if n == 0:
+                        raise Exception("Failed to fetch video URL")
+                else:
+                    file_path = await YouTube.audio_stream(videoid, True)
+                    if not file_path:
+                        raise Exception("Failed to fetch audio URL")
             except Exception:
                 return await mystic.edit_text(
                     _["call_9"], disable_web_page_preview=True

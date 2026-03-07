@@ -8,6 +8,7 @@
 # All rights reserved.
 #
 
+import asyncio
 import os
 import re
 
@@ -174,8 +175,13 @@ async def song_download_cb(client, CallbackQuery, _):
     stype, format_id, vidid = callback_request.split("|")
     mystic = await CallbackQuery.edit_message_text(_["song_8"])
     yturl = f"https://www.youtube.com/watch?v={vidid}"
-    with yt_dlp.YoutubeDL({"quiet": True}) as ytdl:
-        x = ytdl.extract_info(yturl, download=False)
+    loop = asyncio.get_running_loop()
+
+    def _extract_info():
+        with yt_dlp.YoutubeDL({"quiet": True}) as ytdl:
+            return ytdl.extract_info(yturl, download=False)
+
+    x = await loop.run_in_executor(None, _extract_info)
     title = re.sub(r"\W+", " ", x["title"]).title()
     thumb_image_path = await CallbackQuery.message.download()
     duration = x["duration"]
@@ -183,9 +189,21 @@ async def song_download_cb(client, CallbackQuery, _):
         width = CallbackQuery.message.photo.width
         height = CallbackQuery.message.photo.height
         try:
-            file_path = await YouTube.download(
-                yturl, mystic, songvideo=True, format_id=format_id, title=title
-            )
+            def _song_video_dl():
+                opts = {
+                    "format": f"{format_id}+140",
+                    "outtmpl": f"downloads/{title}",
+                    "geo_bypass": True,
+                    "nocheckcertificate": True,
+                    "quiet": True,
+                    "no_warnings": True,
+                    "prefer_ffmpeg": True,
+                    "merge_output_format": "mp4",
+                }
+                with yt_dlp.YoutubeDL(opts) as ydl:
+                    ydl.download([yturl])
+            await loop.run_in_executor(None, _song_video_dl)
+            file_path = f"downloads/{title}.mp4"
         except Exception as e:
             return await mystic.edit_text(_["song_9"].format(e))
         med = InputMediaVideo(
@@ -210,9 +228,27 @@ async def song_download_cb(client, CallbackQuery, _):
         os.remove(file_path)
     elif stype == "audio":
         try:
-            filename = await YouTube.download(
-                yturl, mystic, songaudio=True, format_id=format_id, title=title
-            )
+            def _song_audio_dl():
+                opts = {
+                    "format": format_id,
+                    "outtmpl": f"downloads/{title}.%(ext)s",
+                    "geo_bypass": True,
+                    "nocheckcertificate": True,
+                    "quiet": True,
+                    "no_warnings": True,
+                    "prefer_ffmpeg": True,
+                    "postprocessors": [
+                        {
+                            "key": "FFmpegExtractAudio",
+                            "preferredcodec": "mp3",
+                            "preferredquality": "192",
+                        }
+                    ],
+                }
+                with yt_dlp.YoutubeDL(opts) as ydl:
+                    ydl.download([yturl])
+            await loop.run_in_executor(None, _song_audio_dl)
+            filename = f"downloads/{title}.mp3"
         except Exception as e:
             return await mystic.edit_text(_["song_9"].format(e))
         med = InputMediaAudio(

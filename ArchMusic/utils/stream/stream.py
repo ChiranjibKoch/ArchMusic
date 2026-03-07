@@ -8,6 +8,7 @@
 # All rights reserved.
 #
 
+import asyncio
 import os
 from random import randint
 from typing import Union
@@ -25,11 +26,43 @@ from ArchMusic.utils.database import (
     music_on,
 )
 from ArchMusic.utils.exceptions import AssistantErr
+from ArchMusic.utils.formatters import time_to_seconds
 from ArchMusic.utils.inline.play import stream_markup, telegram_markup
 from ArchMusic.utils.inline.playlist import close_markup
 from ArchMusic.utils.pastebin import ArchMusicbin
 from ArchMusic.utils.stream.queue import put_queue, put_queue_index
 from ArchMusic.utils.thumbnails import gen_thumb, gen_qthumb
+
+_AUTO_QUEUE_LIMIT = 4
+
+
+async def _auto_queue(chat_id, original_chat_id, title, user_id, video):
+    try:
+        for query_type in range(1, _AUTO_QUEUE_LIMIT + 1):
+            try:
+                aq_title, aq_dur, _, aq_vidid = await YouTube.slider(title, query_type)
+            except Exception:
+                continue
+            if not aq_dur:
+                continue
+            try:
+                if int(time_to_seconds(aq_dur)) > config.DURATION_LIMIT:
+                    continue
+            except Exception:
+                continue
+            await put_queue(
+                chat_id,
+                original_chat_id,
+                f"vid_{aq_vidid}",
+                aq_title,
+                aq_dur,
+                "AutoQueue",
+                aq_vidid,
+                user_id,
+                "video" if video else "audio",
+            )
+    except Exception:
+        pass
 
 
 def _video_status(video):
@@ -93,26 +126,26 @@ async def stream(
             else:
                 if not forceplay:
                     db[chat_id] = []
-                meta = await YouTube.cdn_meta(vidid, videoid=True, video=bool(video))
-                if meta and meta.get("stream_url"):
-                    file_path = meta["stream_url"]
-                    direct = True
-                else:
-                    meta = {}
-                    try:
-                        file_path, direct = await YouTube.download(
-                            vidid, mystic, video=_video_status(video), videoid=True
-                        )
-                    except Exception:
-                        raise AssistantErr(_["play_16"])
-                queued_path = file_path if direct else f"vid_{vidid}"
+                try:
+                    if bool(video):
+                        n, file_path = await YouTube.video(vidid, videoid=True)
+                        if n == 0:
+                            raise AssistantErr(_["play_16"])
+                    else:
+                        file_path = await YouTube.audio_stream(vidid, videoid=True)
+                        if not file_path:
+                            raise AssistantErr(_["play_16"])
+                except AssistantErr:
+                    raise
+                except Exception:
+                    raise AssistantErr(_["play_16"])
                 await ArchMusic.join_call(
                     chat_id, original_chat_id, file_path, video=_video_status(video)
                 )
                 await put_queue(
                     chat_id,
                     original_chat_id,
-                    queued_path,
+                    file_path,
                     title,
                     duration_min,
                     user_name,
@@ -121,7 +154,7 @@ async def stream(
                     "video" if video else "audio",
                     forceplay=forceplay,
                 )
-                img = await gen_thumb(vidid, prefetched=meta if meta else None)
+                img = await gen_thumb(vidid)
                 button = stream_markup(_, vidid, chat_id)
                 run = await app.send_photo(
                     original_chat_id,
@@ -152,28 +185,26 @@ async def stream(
 
     elif streamtype == "youtube":
         vidid = result["vidid"]
-        meta = await YouTube.cdn_meta(vidid, videoid=True, video=bool(video))
-        if meta and meta.get("stream_url"):
-            file_path = meta["stream_url"]
-            direct = True
-            title = meta.get("title", result.get("title", "Unknown")).title()
-            duration_min = meta.get("duration_min", result.get("duration_min", "Unknown"))
-        else:
-            meta = {}
-            title = result["title"].title()
-            duration_min = result["duration_min"]
-            try:
-                file_path, direct = await YouTube.download(
-                    vidid, mystic, videoid=True, video=_video_status(video)
-                )
-            except Exception:
-                raise AssistantErr(_["play_16"])
-        queued_path = file_path if direct else f"vid_{vidid}"
+        title = result["title"].title()
+        duration_min = result["duration_min"]
+        try:
+            if bool(video):
+                n, file_path = await YouTube.video(vidid, videoid=True)
+                if n == 0:
+                    raise AssistantErr(_["play_16"])
+            else:
+                file_path = await YouTube.audio_stream(vidid, videoid=True)
+                if not file_path:
+                    raise AssistantErr(_["play_16"])
+        except AssistantErr:
+            raise
+        except Exception:
+            raise AssistantErr(_["play_16"])
         if await is_active_chat(chat_id):
             await put_queue(
                 chat_id,
                 original_chat_id,
-                queued_path,
+                f"vid_{vidid}",
                 title,
                 duration_min,
                 user_name,
@@ -182,7 +213,7 @@ async def stream(
                 "video" if video else "audio",
             )
             position = len(db.get(chat_id)) - 1
-            img = await gen_qthumb(vidid, prefetched=meta if meta else None)
+            img = await gen_qthumb(vidid)
             await app.send_photo(
                 original_chat_id,
                 photo=img,
@@ -197,7 +228,7 @@ async def stream(
             await put_queue(
                 chat_id,
                 original_chat_id,
-                queued_path,
+                file_path,
                 title,
                 duration_min,
                 user_name,
@@ -206,7 +237,7 @@ async def stream(
                 "video" if video else "audio",
                 forceplay=forceplay,
             )
-            img = await gen_thumb(vidid, prefetched=meta if meta else None)
+            img = await gen_thumb(vidid)
             button = stream_markup(_, vidid, chat_id)
             run = await app.send_photo(
                 original_chat_id,
@@ -219,6 +250,9 @@ async def stream(
             )
             db[chat_id][0]["mystic"] = run
             db[chat_id][0]["markup"] = "stream"
+            asyncio.create_task(
+                _auto_queue(chat_id, original_chat_id, title, user_id, video)
+            )
 
     elif streamtype == "soundcloud":
         file_path = result["filepath"]
