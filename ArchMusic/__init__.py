@@ -12,6 +12,12 @@ from youtubesearchpython.core.requests import RequestCore
 from youtubesearchpython.core.constants import userAgent
 
 
+def _init_no_proxy(self):
+    self.url = None
+    self.data = None
+    self.timeout = 2
+
+
 def _sync_post(self) -> httpx.Response:
     return httpx.post(
         self.url,
@@ -50,6 +56,7 @@ async def _async_get(self) -> httpx.Response:
         )
 
 
+RequestCore.__init__ = _init_no_proxy
 RequestCore.syncPostRequest = _sync_post
 RequestCore.asyncPostRequest = _async_post
 RequestCore.syncGetRequest = _sync_get
