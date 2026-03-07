@@ -23,6 +23,8 @@ from youtubesearchpython.__future__ import VideosSearch
 
 from ArchMusic.utils.formatters import time_to_seconds
 
+_COOKIES_FILE = "assets/cookies.txt"
+
 _COMMON_OPTS = {
     "geo_bypass": True,
     "nocheckcertificate": True,
@@ -30,10 +32,15 @@ _COMMON_OPTS = {
     "no_warnings": True,
     "extractor_retries": 1,
     "socket_timeout": 5,
-    "cookiefile": "assets/cookies.txt",
 }
 
 _THUMB_RESOLUTIONS = ["maxresdefault", "sddefault", "hqdefault", "mqdefault", "default"]
+
+
+def _cookies_opts() -> dict:
+    if os.path.isfile(_COOKIES_FILE):
+        return {"cookiefile": _COOKIES_FILE}
+    return {}
 
 
 async def shell_cmd(cmd):
@@ -52,13 +59,17 @@ async def shell_cmd(cmd):
 
 
 async def _cdn_url(link: str, fmt: str) -> str | None:
-    proc = await asyncio.create_subprocess_exec(
+    args = [
         "yt-dlp", "-g",
         "-f", fmt,
         "--format-sort", "res,fps,tbr",
         "--no-playlist",
-        "--cookies", "assets/cookies.txt",
-        link,
+    ]
+    if os.path.isfile(_COOKIES_FILE):
+        args += ["--cookies", _COOKIES_FILE]
+    args.append(link)
+    proc = await asyncio.create_subprocess_exec(
+        *args,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
@@ -217,8 +228,9 @@ class YouTubeAPI:
             link = self.listbase + link
         if "&" in link:
             link = link.split("&")[0]
+        cookies_part = f"--cookies {shlex.quote(_COOKIES_FILE)}" if os.path.isfile(_COOKIES_FILE) else ""
         playlist = await shell_cmd(
-            f"yt-dlp -i --get-id --flat-playlist --playlist-end {limit} --skip-download --cookies assets/cookies.txt {shlex.quote(link)}"
+            f"yt-dlp -i --get-id --flat-playlist --playlist-end {limit} --skip-download {cookies_part} {shlex.quote(link)}"
         )
         try:
             result = playlist.split("\n")
@@ -250,7 +262,7 @@ class YouTubeAPI:
             link = self.base + link
         if "&" in link:
             link = link.split("&")[0]
-        ydl_opts = {**_COMMON_OPTS}
+        ydl_opts = {**_COMMON_OPTS, **_cookies_opts()}
         ydl = YoutubeDL(ydl_opts)
         with ydl:
             r = ydl.extract_info(link, download=False)
