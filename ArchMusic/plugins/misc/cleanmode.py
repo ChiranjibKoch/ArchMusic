@@ -89,14 +89,14 @@ async def broadcast_message(client, message, _):
         query    = None
     else:
         if len(message.command) < 2:
-            return await message.reply_text(_["broad_5"])
+            return await message.reply_text(_["broad_5"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         raw   = message.text.split(None, 1)[1]
         query = raw
         for flag in ("-pin", "-nobot", "-pinloud", "-assistant", "-user"):
             query = query.replace(flag, "")
         query = query.strip()
         if not query:
-            return await message.reply_text(_["broad_6"])
+            return await message.reply_text(_["broad_6"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         src_chat = src_msg = None
 
     flags = _parse_flags(message.text)
@@ -135,7 +135,7 @@ async def broadcast_message(client, message, _):
                 except Exception:
                     continue
             try:
-                await message.reply_text(_["broad_1"].format(sent, pin))
+                await message.reply_text(_["broad_1"].format(sent, pin), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
             except Exception:
                 pass
 
@@ -152,13 +152,13 @@ async def broadcast_message(client, message, _):
                 except Exception:
                     pass
             try:
-                await message.reply_text(_["broad_7"].format(susr))
+                await message.reply_text(_["broad_7"].format(susr), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
             except Exception:
                 pass
 
         if flags["assistant"]:
             from ArchMusic.core.userbot import assistants
-            aw   = await message.reply_text(_["broad_2"])
+            aw   = await message.reply_text(_["broad_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
             text = _["broad_3"]
             for num in assistants:
                 sent   = 0

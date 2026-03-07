@@ -34,6 +34,7 @@ async def ping_com(client, message: Message, _):
     response = await message.reply_photo(
         photo=PING_IMG_URL,
         caption=_["ping_1"],
+        quote=True, message_thread_id=getattr(message, "message_thread_id", None),
     )
     start = datetime.now()
     pytgping = await ArchMusic.ping()

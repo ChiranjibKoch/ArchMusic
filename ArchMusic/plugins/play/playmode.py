@@ -40,4 +40,5 @@ async def playmode_(client, message: Message, _):
     await message.reply_text(
         _["playmode_1"].format(message.chat.title),
         reply_markup=InlineKeyboardMarkup(buttons),
+        quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
     )

@@ -219,3 +219,6 @@ if TELEGRAM_VIDEO_URL:
 if not MUSIC_BOT_NAME.isascii():
     print("[ERROR] - You've defined MUSIC_BOT_NAME wrong. Please don't use any special characters or Special font for this... Keep it simple and small.")
     sys.exit()
+
+# Set to True to enable the Now Playing Story feature (sends a story to the assistant's account when a track starts)
+STORY_FEATURE = getenv("STORY_FEATURE", "false").lower() == "true"

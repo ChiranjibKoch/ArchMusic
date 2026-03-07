@@ -81,11 +81,11 @@ async def log_(client, message, _):
     try:
         if await _is_heroku():
             if HAPP is None:
-                return await message.reply_text(_["heroku_1"])
+                return await message.reply_text(_["heroku_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
             link = await ArchMusicbin(HAPP.get_log())
-            return await message.reply_text(link)
+            return await message.reply_text(link, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         if not os.path.exists(config.LOG_FILE_NAME):
-            return await message.reply_text(_["heroku_2"])
+            return await message.reply_text(_["heroku_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         try:
             numb = int(message.text.split(None, 1)[1])
         except (IndexError, ValueError):
@@ -93,9 +93,9 @@ async def log_(client, message, _):
         with open(config.LOG_FILE_NAME) as log:
             data = "".join(log.readlines()[-numb:])
         link = await ArchMusicbin(data)
-        return await message.reply_text(link)
+        return await message.reply_text(link, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     except Exception as e:
-        await message.reply_text(_["heroku_2"])
+        await message.reply_text(_["heroku_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         raise
 
 
@@ -108,22 +108,22 @@ async def log_(client, message, _):
 async def varget_(client, message, _):
     usage = _["heroku_3"]
     if len(message.command) != 2:
-        return await message.reply_text(usage)
+        return await message.reply_text(usage, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     key = message.text.split(None, 2)[1]
     if await _is_heroku():
         if HAPP is None:
-            return await message.reply_text(_["heroku_1"])
+            return await message.reply_text(_["heroku_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         cfg = HAPP.config()
         if key in cfg:
-            return await message.reply_text(f"**{key}:** `{cfg[key]}`")
-        return await message.reply_text(_["heroku_4"])
+            return await message.reply_text(f"**{key}:** `{cfg[key]}`", quote=True, message_thread_id=getattr(message, "message_thread_id", None))
+        return await message.reply_text(_["heroku_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     path = dotenv.find_dotenv()
     if not path:
-        return await message.reply_text(_["heroku_5"])
+        return await message.reply_text(_["heroku_5"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     value = dotenv.get_key(path, key)
     if value is None:
-        return await message.reply_text(_["heroku_4"])
-    return await message.reply_text(f"**{key}:** `{value}`")
+        return await message.reply_text(_["heroku_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
+    return await message.reply_text(f"**{key}:** `{value}`", quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
 
 # ---------------------------------------------------------------------------
@@ -135,24 +135,24 @@ async def varget_(client, message, _):
 async def vardel_(client, message, _):
     usage = _["heroku_6"]
     if len(message.command) != 2:
-        return await message.reply_text(usage)
+        return await message.reply_text(usage, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     key = message.text.split(None, 2)[1]
     if await _is_heroku():
         if HAPP is None:
-            return await message.reply_text(_["heroku_1"])
+            return await message.reply_text(_["heroku_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         cfg = HAPP.config()
         if key not in cfg:
-            return await message.reply_text(_["heroku_4"])
-        await message.reply_text(_["heroku_7"].format(key))
+            return await message.reply_text(_["heroku_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
+        await message.reply_text(_["heroku_7"].format(key), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         del cfg[key]
         return
     path = dotenv.find_dotenv()
     if not path:
-        return await message.reply_text(_["heroku_5"])
+        return await message.reply_text(_["heroku_5"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     success, _, _ = dotenv.unset_key(path, key)
     if not success:
-        return await message.reply_text(_["heroku_4"])
-    await message.reply_text(_["heroku_7"].format(key))
+        return await message.reply_text(_["heroku_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
+    await message.reply_text(_["heroku_7"].format(key), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     os.system(f"kill -9 {os.getpid()} && bash start")
 
 
@@ -165,23 +165,23 @@ async def vardel_(client, message, _):
 async def set_var(client, message, _):
     usage = _["heroku_8"]
     if len(message.command) < 3:
-        return await message.reply_text(usage)
+        return await message.reply_text(usage, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     parts = message.text.split(None, 2)
     key, value = parts[1].strip(), parts[2].strip()
     if await _is_heroku():
         if HAPP is None:
-            return await message.reply_text(_["heroku_1"])
+            return await message.reply_text(_["heroku_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         cfg = HAPP.config()
         reply_key = _["heroku_9"] if key in cfg else _["heroku_10"]
-        await message.reply_text(reply_key.format(key))
+        await message.reply_text(reply_key.format(key), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         cfg[key] = value
         return
     path = dotenv.find_dotenv()
     if not path:
-        return await message.reply_text(_["heroku_5"])
+        return await message.reply_text(_["heroku_5"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     dotenv.set_key(path, key, value)
     reply_key = _["heroku_9"] if dotenv.get_key(path, key) else _["heroku_10"]
-    await message.reply_text(reply_key.format(key))
+    await message.reply_text(reply_key.format(key), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     os.system(f"kill -9 {os.getpid()} && bash start")
 
 
@@ -194,10 +194,10 @@ async def set_var(client, message, _):
 async def usage_dynos(client, message, _):
     # Credits: CatUserbot
     if not await _is_heroku():
-        return await message.reply_text(_["heroku_11"])
+        return await message.reply_text(_["heroku_11"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if HAPP is None:
-        return await message.reply_text(_["heroku_1"])
-    dyno = await message.reply_text(_["heroku_12"])
+        return await message.reply_text(_["heroku_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
+    dyno = await message.reply_text(_["heroku_12"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     Heroku = heroku3.from_key(config.HEROKU_API_KEY)
     account_id = Heroku.account().id
     headers = {
@@ -246,8 +246,8 @@ async def usage_dynos(client, message, _):
 @language
 async def update_(client, message, _):
     if await _is_heroku() and HAPP is None:
-        return await message.reply_text(_["heroku_1"])
-    response = await message.reply_text(_["heroku_13"])
+        return await message.reply_text(_["heroku_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
+    response = await message.reply_text(_["heroku_13"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     try:
         repo = Repo()
     except GitCommandError:
@@ -321,7 +321,7 @@ async def update_(client, message, _):
 
 @app.on_message(filters.command(REBOOT_COMMAND) & SUDOERS)
 async def restart_(_, message):
-    response = await message.reply_text("Restarting…")
+    response = await message.reply_text("Restarting…", quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     await _notify_active_chats()
     for d in _DIRS_TO_CLEAN:
         try:

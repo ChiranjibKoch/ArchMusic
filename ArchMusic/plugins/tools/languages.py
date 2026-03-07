@@ -59,6 +59,7 @@ async def langs_command(client, message: Message, _):
     await message.reply_text(
         _["setting_1"].format(message.chat.title, message.chat.id),
         reply_markup=keyboard,
+        quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
     )
 
 

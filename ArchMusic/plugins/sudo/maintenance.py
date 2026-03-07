@@ -29,7 +29,7 @@ async def maintenance(client, message: Message):
 
     usage = _["maint_1"]
     if len(message.command) != 2:
-        return await message.reply_text(usage)
+        return await message.reply_text(usage, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
     state = message.text.split(None, 1)[1].strip().lower()
     # BUG FIX: original had the is_maintenance() checks inverted —
@@ -39,15 +39,15 @@ async def maintenance(client, message: Message):
 
     if state == "enable":
         if currently_on:
-            await message.reply_text("Maintenance mode is already enabled.")
+            await message.reply_text("Maintenance mode is already enabled.", quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         else:
             await maintenance_on()
-            await message.reply_text(_["maint_2"])
+            await message.reply_text(_["maint_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     elif state == "disable":
         if not currently_on:
-            await message.reply_text("Maintenance mode is already disabled.")
+            await message.reply_text("Maintenance mode is already disabled.", quote=True, message_thread_id=getattr(message, "message_thread_id", None))
         else:
             await maintenance_off()
-            await message.reply_text(_["maint_3"])
+            await message.reply_text(_["maint_3"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     else:
-        await message.reply_text(usage)
+        await message.reply_text(usage, quote=True, message_thread_id=getattr(message, "message_thread_id", None))

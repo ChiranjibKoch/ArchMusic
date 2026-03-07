@@ -55,10 +55,19 @@ async def stats_global(client, message: Message, _):
     upl = stats_buttons(
         _, True if message.from_user.id in SUDOERS else False
     )
+    chat_id = message.chat.id
+    boost_text = ""
+    try:
+        boosts = await app.get_boosts_status(chat_id)
+        boost_text = f"\n**Boost Level:** {boosts.level}"
+    except Exception:
+        pass
+    caption = _["gstats_11"].format(config.MUSIC_BOT_NAME) + boost_text
     await message.reply_photo(
         photo=config.STATS_IMG_URL,
-        caption=_["gstats_11"].format(config.MUSIC_BOT_NAME),
+        caption=caption,
         reply_markup=upl,
+        quote=True, message_thread_id=getattr(message, "message_thread_id", None),
     )
 
 
@@ -69,7 +78,7 @@ async def stats_global(client, message: Message, _):
 )
 @language
 async def gstats_global(client, message: Message, _):
-    mystic = await message.reply_text(_["gstats_1"])
+    mystic = await message.reply_text(_["gstats_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
     stats = await get_global_tops()
     if not stats:
         await asyncio.sleep(1)
@@ -244,6 +253,13 @@ async def overall_stats(client, CallbackQuery, _):
     play_duration = config.DURATION_LIMIT_MIN
     ass = "Yes" if config.AUTO_LEAVING_ASSISTANT == str(True) else "No"
     cm = config.CLEANMODE_DELETE_MINS
+    chat_id = CallbackQuery.message.chat.id
+    boost_text = ""
+    try:
+        boosts = await app.get_boosts_status(chat_id)
+        boost_text = f"\n**Chat Boost Level:** {boosts.level}"
+    except Exception:
+        pass
     text = f"""**Bot's Stats and Information:**
 
 **Imported Modules:** {mod}
@@ -260,7 +276,7 @@ async def overall_stats(client, CallbackQuery, _):
 **Play Duration Limit:** {play_duration} Mins
 **Song Download Limit:** {song} Mins
 **Bot's Server Playlist Limit:** {playlist_limit}
-**Playlist Play Limit:** {fetch_playlist}"""
+**Playlist Play Limit:** {fetch_playlist}{boost_text}"""
     med = InputMediaPhoto(media=config.STATS_IMG_URL, caption=text)
     try:
         await CallbackQuery.edit_message_media(media=med, reply_markup=upl)

@@ -27,9 +27,9 @@ PAUSE_COMMAND = get_command("PAUSE_COMMAND")
 @AdminRightsCheck
 async def pause_admin(cli, message: Message, _, chat_id):
     if not len(message.command) == 1:
-        return await message.reply_text(_["general_2"])
+        return await message.reply_text(_["general_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if not await is_music_playing(chat_id):
-        return await message.reply_text(_["admin_1"])
+        return await message.reply_text(_["admin_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     await music_off(chat_id)
     await ArchMusic.pause_stream(chat_id)
-    await message.reply_text(_["admin_2"].format(message.from_user.mention))
+    await message.reply_text(_["admin_2"].format(message.from_user.mention), quote=True, message_thread_id=getattr(message, "message_thread_id", None))

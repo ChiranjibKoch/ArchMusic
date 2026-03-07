@@ -48,12 +48,13 @@ async def start_comm(client, message: Message, _):
         if name[0:4] == "help":
             keyboard = help_pannel(_)
             return await message.reply_text(
-                _["help_1"], reply_markup=keyboard
+                _["help_1"], reply_markup=keyboard,
+                quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
             )
         if name[0:4] == "song":
-            return await message.reply_text(_["song_2"])
+            return await message.reply_text(_["song_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
         if name[0:3] == "sta":
-            m = await message.reply_text("🔎 Fetching your personal stats.!")
+            m = await message.reply_text("🔎 Fetching your personal stats.!", quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
             stats = await get_userss(message.from_user.id)
             tot = len(stats)
             if not stats:
@@ -104,7 +105,7 @@ async def start_comm(client, message: Message, _):
                 return await m.edit(_["ustats_1"])
             thumbnail = await YouTube.thumbnail(videoid, True)
             await m.delete()
-            await message.reply_photo(photo=thumbnail, caption=msg)
+            await message.reply_photo(photo=thumbnail, caption=msg, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
             return
         if name[0:3] == "sud":
             await sudoers_list(client=client, message=message, _=_)
@@ -123,11 +124,11 @@ async def start_comm(client, message: Message, _):
             if lyrics:
                 return await Telegram.send_split_text(message, lyrics)
             else:
-                return await message.reply_text("Failed to get lyrics.")
+                return await message.reply_text("Failed to get lyrics.", quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
         if name[0:3] == "del":
             await del_plist_msg(client=client, message=message, _=_)
         if name[0:3] == "inf":
-            m = await message.reply_text("🔎 Fetching Info!")
+            m = await message.reply_text("🔎 Fetching Info!", quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
             query = (str(name)).replace("info_", "", 1)
             query = f"https://www.youtube.com/watch?v={query}"
             results = VideosSearch(query, limit=1)
@@ -187,16 +188,19 @@ async def start_comm(client, message: Message, _):
                     photo=config.START_IMG_URL,
                     caption=_["start_2"].format(config.MUSIC_BOT_NAME),
                     reply_markup=InlineKeyboardMarkup(out),
+                    quote=True, message_thread_id=getattr(message, "message_thread_id", None),
                 )
             except:
                 await message.reply_text(
                     _["start_2"].format(config.MUSIC_BOT_NAME),
                     reply_markup=InlineKeyboardMarkup(out),
+                    quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
                 )
         else:
             await message.reply_text(
                 _["start_2"].format(config.MUSIC_BOT_NAME),
                 reply_markup=InlineKeyboardMarkup(out),
+                quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
             )
         if await is_on_off(config.LOG):
             sender_id = message.from_user.id
@@ -216,7 +220,8 @@ async def welcome(client, message: Message):
     if config.PRIVATE_BOT_MODE == str(True):
         if not await is_served_private_chat(message.chat.id):
             await message.reply_text(
-                "**Private Music Bot**\n\nOnly for authorized chats from the owner. Ask my owner to allow your chat first."
+                "**Private Music Bot**\n\nOnly for authorized chats from the owner. Ask my owner to allow your chat first.",
+                quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
             )
             return await app.leave_chat(message.chat.id)
     else:
@@ -228,13 +233,14 @@ async def welcome(client, message: Message):
             if member.id == app.id:
                 chat_type = message.chat.type
                 if chat_type != ChatType.SUPERGROUP:
-                    await message.reply_text(_["start_6"])
+                    await message.reply_text(_["start_6"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
                     return await app.leave_chat(message.chat.id)
                 if chat_id in await blacklisted_chats():
                     await message.reply_text(
                         _["start_7"].format(
                             f"https://t.me/{app.username}?start=sudolist"
-                        )
+                        ),
+                        quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
                     )
                     return await app.leave_chat(chat_id)
                 userbot = await get_assistant(message.chat.id)
@@ -251,11 +257,13 @@ async def welcome(client, message: Message):
                 )
             if member.id in config.OWNER_ID:
                 return await message.reply_text(
-                    _["start_4"].format(config.MUSIC_BOT_NAME, member.mention)
+                    _["start_4"].format(config.MUSIC_BOT_NAME, member.mention),
+                    quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
                 )
             if member.id in SUDOERS:
                 return await message.reply_text(
-                    _["start_5"].format(config.MUSIC_BOT_NAME, member.mention)
+                    _["start_5"].format(config.MUSIC_BOT_NAME, member.mention),
+                    quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
                 )
             return
         except:

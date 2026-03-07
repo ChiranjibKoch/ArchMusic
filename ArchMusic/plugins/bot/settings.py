@@ -58,6 +58,7 @@ async def settings_mar(client, message: Message, _):
     await message.reply_text(
         _["setting_1"].format(message.chat.title, message.chat.id),
         reply_markup=InlineKeyboardMarkup(buttons),
+        quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
     )
 
 @app.on_callback_query(

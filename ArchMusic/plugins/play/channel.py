@@ -33,12 +33,13 @@ async def playmode_(client, message: Message, _):
         return await message.reply_text(
             _["cplay_1"].format(
                 message.chat.title, CHANNELPLAY_COMMAND[0]
-            )
+            ),
+            quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
         )
     query = message.text.split(None, 2)[1].lower().strip()
     if (str(query)).lower() == "disable":
         await set_cmode(message.chat.id, None)
-        return await message.reply_text("Channel Play Disabled")
+        return await message.reply_text("Channel Play Disabled", quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
     elif str(query) == "linked":
         chat = await app.get_chat(message.chat.id)
         if chat.linked_chat:
@@ -47,32 +48,35 @@ async def playmode_(client, message: Message, _):
             return await message.reply_text(
                 _["cplay_3"].format(
                     chat.linked_chat.title, chat.linked_chat.id
-                )
+                ),
+                quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
             )
         else:
-            return await message.reply_text(_["cplay_2"])
+            return await message.reply_text(_["cplay_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
     else:
         try:
             chat = await app.get_chat(query)
         except:
-            return await message.reply_text(_["cplay_4"])
+            return await message.reply_text(_["cplay_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
         if chat.type != ChatType.CHANNEL:
-            return await message.reply_text(_["cplay_5"])
+            return await message.reply_text(_["cplay_5"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
         try:
             admins = app.get_chat_members(
                 chat.id, filter=ChatMembersFilter.ADMINISTRATORS
             )
         except:
-            return await message.reply_text(_["cplay_4"])
+            return await message.reply_text(_["cplay_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
         async for users in admins:
             if users.status == ChatMemberStatus.OWNER:
                 creatorusername = users.user.username
                 creatorid = users.user.id
         if creatorid != message.from_user.id:
             return await message.reply_text(
-                _["cplay_6"].format(chat.title, creatorusername)
+                _["cplay_6"].format(chat.title, creatorusername),
+                quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
             )
         await set_cmode(message.chat.id, chat.id)
         return await message.reply_text(
-            _["cplay_3"].format(chat.title, chat.id)
+            _["cplay_3"].format(chat.title, chat.id),
+            quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
         )

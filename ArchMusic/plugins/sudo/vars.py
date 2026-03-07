@@ -32,7 +32,7 @@ def _link(url: str, label: str) -> str:
 
 @app.on_message(filters.command(VARS_COMMAND) & SUDOERS)
 async def vars_func(client, message):
-    mystic = await message.reply_text("Please wait… Getting your config")
+    mystic = await message.reply_text("Please wait… Getting your config", quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     v_limit = await get_video_limit()
     owners = ", ".join(str(i) for i in config.OWNER_ID)
 

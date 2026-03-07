@@ -23,17 +23,18 @@ _USAGE = "**Usage:**\n\n/autoend [enable|disable]"
 @app.on_message(filters.command(AUTOEND_COMMAND) & SUDOERS)
 async def auto_end_stream(client, message):
     if len(message.command) != 2:
-        return await message.reply_text(_USAGE)
+        return await message.reply_text(_USAGE, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     state = message.text.split(None, 1)[1].strip().lower()
     if state == "enable":
         await autoend_on()
         await message.reply_text(
             "Auto End Stream **enabled**.\n\n"
             "Bot will leave voice chat automatically after 3 mins "
-            "if no one is listening, with a warning message."
+            "if no one is listening, with a warning message.",
+            quote=True, message_thread_id=getattr(message, "message_thread_id", None),
         )
     elif state == "disable":
         await autoend_off()
-        await message.reply_text("Auto End Stream **disabled**.")
+        await message.reply_text("Auto End Stream **disabled**.", quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     else:
-        await message.reply_text(_USAGE)
+        await message.reply_text(_USAGE, quote=True, message_thread_id=getattr(message, "message_thread_id", None))

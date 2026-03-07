@@ -42,34 +42,34 @@ async def _resolve_user(message: Message):
 @language
 async def add_sudo_user(client, message: Message, _):
     if MONGO_DB_URI is None:
-        return await message.reply_text(_NO_MONGO_MSG)
+        return await message.reply_text(_NO_MONGO_MSG, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     user = await _resolve_user(message)
     if user is None:
-        return await message.reply_text(_["general_1"])
+        return await message.reply_text(_["general_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if user.id in SUDOERS:
-        return await message.reply_text(_["sudo_1"].format(user.mention))
+        return await message.reply_text(_["sudo_1"].format(user.mention), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if await add_sudo(user.id):
         SUDOERS.add(user.id)
-        await message.reply_text(_["sudo_2"].format(user.mention))
+        await message.reply_text(_["sudo_2"].format(user.mention), quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     else:
-        await message.reply_text("Failed to add sudo user.")
+        await message.reply_text("Failed to add sudo user.", quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
 
 @app.on_message(filters.command(DELSUDO_COMMAND) & filters.user(OWNER_ID))
 @language
 async def del_sudo_user(client, message: Message, _):
     if MONGO_DB_URI is None:
-        return await message.reply_text(_NO_MONGO_MSG)
+        return await message.reply_text(_NO_MONGO_MSG, quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     user = await _resolve_user(message)
     if user is None:
-        return await message.reply_text(_["general_1"])
+        return await message.reply_text(_["general_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if user.id not in SUDOERS:
-        return await message.reply_text(_["sudo_3"])
+        return await message.reply_text(_["sudo_3"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if await remove_sudo(user.id):
         SUDOERS.discard(user.id)
-        await message.reply_text(_["sudo_4"])
+        await message.reply_text(_["sudo_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     else:
-        await message.reply_text("Something went wrong.")
+        await message.reply_text("Something went wrong.", quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
 
 @app.on_message(filters.command(SUDOUSERS_COMMAND) & ~BANNED_USERS)
@@ -102,6 +102,6 @@ async def sudoers_list(client, message: Message, _):
         except Exception:
             continue
     if count == 0:
-        await message.reply_text(_["sudo_7"])
+        await message.reply_text(_["sudo_7"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     else:
-        await message.reply_text(text)
+        await message.reply_text(text, quote=True, message_thread_id=getattr(message, "message_thread_id", None))

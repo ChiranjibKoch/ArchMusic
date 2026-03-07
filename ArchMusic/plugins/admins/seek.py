@@ -29,23 +29,23 @@ _MIN_BUFFER = 10
 @AdminRightsCheck
 async def seek_comm(cli, message: Message, _, chat_id):
     if len(message.command) == 1:
-        return await message.reply_text(_["admin_28"])
+        return await message.reply_text(_["admin_28"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
     query = message.text.split(None, 1)[1].strip()
     if not query.isnumeric():
-        return await message.reply_text(_["admin_29"])
+        return await message.reply_text(_["admin_29"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
     playing = db.get(chat_id)
     if not playing:
-        return await message.reply_text(_["queue_2"])
+        return await message.reply_text(_["queue_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
     duration_seconds = int(playing[0]["seconds"])
     if duration_seconds == 0:
-        return await message.reply_text(_["admin_30"])
+        return await message.reply_text(_["admin_30"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
     file_path = playing[0]["file"]
     if "index_" in file_path or "live_" in file_path:
-        return await message.reply_text(_["admin_30"])
+        return await message.reply_text(_["admin_30"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
     duration_played  = int(playing[0]["played"])
     duration_to_skip = int(query)
@@ -55,17 +55,19 @@ async def seek_comm(cli, message: Message, _, chat_id):
     if is_rewind:
         if (duration_played - duration_to_skip) <= _MIN_BUFFER:
             return await message.reply_text(
-                _["admin_31"].format(seconds_to_min(duration_played), duration)
+                _["admin_31"].format(seconds_to_min(duration_played), duration),
+                quote=True, message_thread_id=getattr(message, "message_thread_id", None),
             )
         to_seek = duration_played - duration_to_skip + 1
     else:
         if (duration_seconds - (duration_played + duration_to_skip)) <= _MIN_BUFFER:
             return await message.reply_text(
-                _["admin_31"].format(seconds_to_min(duration_played), duration)
+                _["admin_31"].format(seconds_to_min(duration_played), duration),
+                quote=True, message_thread_id=getattr(message, "message_thread_id", None),
             )
         to_seek = duration_played + duration_to_skip + 1
 
-    mystic = await message.reply_text(_["admin_32"])
+    mystic = await message.reply_text(_["admin_32"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
 
     if "vid_" in file_path:
         n, file_path = await YouTube.video(playing[0]["vidid"], True)

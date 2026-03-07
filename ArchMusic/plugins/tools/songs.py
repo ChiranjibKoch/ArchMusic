@@ -79,7 +79,7 @@ async def song_commad_group(client, message: Message, _):
             url=f"https://t.me/{app.username}?start=song",
         )
     ]])
-    await message.reply_text(_["song_1"], reply_markup=upl)
+    await message.reply_text(_["song_1"], reply_markup=upl, quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
 
 
 @app.on_message(
@@ -93,8 +93,8 @@ async def song_commad_private(client, message: Message, _):
     url = await YouTube.url(message)
     if url:
         if not await YouTube.exists(url):
-            return await message.reply_text(_["song_5"])
-        mystic = await message.reply_text(_["play_1"])
+            return await message.reply_text(_["song_5"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
+        mystic = await message.reply_text(_["play_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
         (title, duration_min, duration_sec, thumbnail, vidid) = await YouTube.details(url)
         if str(duration_min) == "None":
             return await mystic.edit_text(_["song_3"])
@@ -106,11 +106,12 @@ async def song_commad_private(client, message: Message, _):
             thumbnail,
             caption=_["song_4"].format(title),
             reply_markup=InlineKeyboardMarkup(buttons),
+            quote=True, message_thread_id=getattr(message, "message_thread_id", None),
         )
     else:
         if len(message.command) < 2:
-            return await message.reply_text(_["song_2"])
-    mystic = await message.reply_text(_["play_1"])
+            return await message.reply_text(_["song_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
+    mystic = await message.reply_text(_["play_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True)
     query = message.text.split(None, 1)[1]
     try:
         (title, duration_min, duration_sec, thumbnail, vidid) = await YouTube.details(query)
@@ -126,6 +127,7 @@ async def song_commad_private(client, message: Message, _):
         thumbnail,
         caption=_["song_4"].format(title),
         reply_markup=InlineKeyboardMarkup(buttons),
+        quote=True, message_thread_id=getattr(message, "message_thread_id", None),
     )
 
 

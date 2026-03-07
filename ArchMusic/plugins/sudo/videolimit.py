@@ -23,15 +23,15 @@ VIDEOLIMIT_COMMAND = get_command("VIDEOLIMIT_COMMAND")
 @language
 async def set_video_limit_cmd(client, message: Message, _):
     if len(message.command) != 2:
-        return await message.reply_text(_["vid_1"])
+        return await message.reply_text(_["vid_1"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     state = message.text.split(None, 1)[1].strip()
     if state.lower() == "disable":
         await set_video_limit(0)
-        return await message.reply_text(_["vid_4"])
+        return await message.reply_text(_["vid_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     if not state.isnumeric():
-        return await message.reply_text(_["vid_2"])
+        return await message.reply_text(_["vid_2"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
     limit = int(state)
     await set_video_limit(limit)
     if limit == 0:
-        return await message.reply_text(_["vid_4"])
-    await message.reply_text(_["vid_3"].format(limit))
+        return await message.reply_text(_["vid_4"], quote=True, message_thread_id=getattr(message, "message_thread_id", None))
+    await message.reply_text(_["vid_3"].format(limit), quote=True, message_thread_id=getattr(message, "message_thread_id", None))

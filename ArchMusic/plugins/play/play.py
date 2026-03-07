@@ -60,7 +60,8 @@ async def play_commnd(
     fplay,
 ):
     mystic = await message.reply_text(
-        _["play_2"].format(channel) if channel else _["play_1"]
+        _["play_2"].format(channel) if channel else _["play_1"],
+        quote=True, message_thread_id=getattr(message, "message_thread_id", None), disable_web_page_preview=True,
     )
     plist_id = None
     slider = None
@@ -334,6 +335,7 @@ async def play_commnd(
                 photo=img,
                 caption=cap,
                 reply_markup=InlineKeyboardMarkup(buttons),
+                quote=True, message_thread_id=getattr(message, "message_thread_id", None),
             )
             return await play_logs(message, streamtype=f"Playlist : {plist_type}")
         else:
@@ -350,6 +352,7 @@ async def play_commnd(
                         details["title"].title(), details["duration_min"]
                     ),
                     reply_markup=InlineKeyboardMarkup(buttons),
+                    quote=True, message_thread_id=getattr(message, "message_thread_id", None),
                 )
                 return await play_logs(message, streamtype="Searched on Youtube")
             else:
@@ -363,6 +366,7 @@ async def play_commnd(
                     photo=img,
                     caption=cap,
                     reply_markup=InlineKeyboardMarkup(buttons),
+                    quote=True, message_thread_id=getattr(message, "message_thread_id", None),
                 )
                 return await play_logs(message, streamtype="URL Searched Inline")
 
