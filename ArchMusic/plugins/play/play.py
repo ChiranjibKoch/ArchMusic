@@ -110,23 +110,20 @@ async def play_commnd(
             return await mystic.edit_text(
                 _["play_6"].format(config.DURATION_LIMIT_MIN, duration_min)
             )
-        file_path = await Telegram.get_filepath(audio=audio_telegram)
-        if await Telegram.download(_, message, mystic, file_path):
-            details = {
-                "title": await Telegram.get_filename(audio_telegram, audio=True),
-                "link": await Telegram.get_link(message),
-                "path": file_path,
-                "dur": await Telegram.get_duration(audio_telegram),
-            }
-            try:
-                await stream(
-                    _, mystic, user_id, details, chat_id, user_name,
-                    message.chat.id, streamtype="telegram", forceplay=fplay,
-                )
-            except Exception as e:
-                return await mystic.edit_text(_err(e, _))
-            return await mystic.delete()
-        return
+        details = {
+            "title": await Telegram.get_filename(audio_telegram, audio=True),
+            "link": await Telegram.get_link(message),
+            "path": audio_telegram.file_id,
+            "dur": await Telegram.get_duration(audio_telegram),
+        }
+        try:
+            await stream(
+                _, mystic, user_id, details, chat_id, user_name,
+                message.chat.id, streamtype="telegram", forceplay=fplay,
+            )
+        except Exception as e:
+            return await mystic.edit_text(_err(e, _))
+        return await mystic.delete()
 
     elif video_telegram:
         if not await is_video_allowed(message.chat.id):
@@ -144,23 +141,20 @@ async def play_commnd(
                 )
         if video_telegram.file_size > config.TG_VIDEO_FILESIZE_LIMIT:
             return await mystic.edit_text(_["play_9"])
-        file_path = await Telegram.get_filepath(video=video_telegram)
-        if await Telegram.download(_, message, mystic, file_path):
-            details = {
-                "title": await Telegram.get_filename(video_telegram),
-                "link": await Telegram.get_link(message),
-                "path": file_path,
-                "dur": await Telegram.get_duration(video_telegram),
-            }
-            try:
-                await stream(
-                    _, mystic, user_id, details, chat_id, user_name,
-                    message.chat.id, video=True, streamtype="telegram", forceplay=fplay,
-                )
-            except Exception as e:
-                return await mystic.edit_text(_err(e, _))
-            return await mystic.delete()
-        return
+        details = {
+            "title": await Telegram.get_filename(video_telegram),
+            "link": await Telegram.get_link(message),
+            "path": video_telegram.file_id,
+            "dur": await Telegram.get_duration(video_telegram),
+        }
+        try:
+            await stream(
+                _, mystic, user_id, details, chat_id, user_name,
+                message.chat.id, video=True, streamtype="telegram", forceplay=fplay,
+            )
+        except Exception as e:
+            return await mystic.edit_text(_err(e, _))
+        return await mystic.delete()
 
     elif url:
         if await YouTube.exists(url):
@@ -275,6 +269,20 @@ async def play_commnd(
             except Exception as e:
                 return await mystic.edit_text(_err(e, _))
             return await mystic.delete()
+
+        elif is_direct_stream(url):
+            video = True if any(
+                x in url.lower() for x in ["mime=video", ".mp4", ".webm"]
+            ) else None
+            try:
+                await stream(
+                    _, mystic, user_id, url, chat_id, user_name,
+                    message.chat.id, video=video, streamtype="index",
+                    forceplay=fplay,
+                )
+            except Exception as e:
+                return await mystic.edit_text(_err(e, _))
+            return await play_logs(message, streamtype="Direct Stream")
 
         else:
             try:
