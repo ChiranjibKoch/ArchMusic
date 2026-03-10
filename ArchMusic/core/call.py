@@ -89,9 +89,9 @@ def _build_stream(
     video: bool = False,
     ffmpeg_params: str = "",
 ) -> MediaStream:
-    kwargs = {}
-    if ffmpeg_params:
-        kwargs["ffmpeg_parameters"] = ffmpeg_params
+    reconnect = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+    combined = f"{reconnect} {ffmpeg_params}".strip()
+    kwargs = {"ffmpeg_parameters": combined}
 
     if video:
         return MediaStream(
