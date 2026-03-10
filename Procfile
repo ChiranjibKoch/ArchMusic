@@ -1,1 +1,1 @@
-worker: python3 -m ArchMusic
+worker: uv run python3 -m ArchMusic

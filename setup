@@ -37,9 +37,10 @@ update() {
 }
 
 packages(){
-	if ! command -v pip &>/dev/null; then
-		pprint "Couldn't found pip, installing now.. "
-		sudo apt install python3-pip -y 2>pypilog.txt 1>/dev/null &&
+	if ! command -v uv &>/dev/null; then
+		pprint "Couldn't find uv, installing now.. "
+		curl -LsSf https://astral.sh/uv/install.sh | sh 2>pypilog.txt 1>/dev/null &&
+		export PATH="$HOME/.local/bin:$PATH" &&
 		pprint "SUCCESS.\n\n" "cgreen" || (pprint "FAIL.\n\n" "cred"; exit 1)
 	fi
 
@@ -78,9 +79,8 @@ repo(){
 
 
 installation(){
-	pprint "\n\nUpgrading pip and installing dependency packages.. "
-	pip3 install -U pip &>>pypilog.txt &&
-	pip3 install -U -r requirements.txt &>>pypilog.txt &&
+	pprint "\n\nInstalling dependency packages.. "
+	uv sync &>>pypilog.txt &&
 	pprint "DONE.\n" "cgreen" && return
 	pprint "FAIL.\n" "cred"
 	exit 1
