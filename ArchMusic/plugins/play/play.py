@@ -38,6 +38,27 @@ from ArchMusic.utils.stream.stream import stream
 PLAY_COMMAND = get_command("PLAY_COMMAND")
 
 
+DIRECT_STREAM_DOMAINS = [
+    "googlevideo.com",
+    ".m3u8",
+    ".m3u",
+    "cdn.",
+    "stream.",
+    ".ts",
+    ".mp4",
+    ".webm",
+    ".ogg",
+    ".mp3",
+    ".aac",
+    ".flac",
+    ".opus",
+]
+
+
+def is_direct_stream(url: str) -> bool:
+    return any(d in url.lower() for d in DIRECT_STREAM_DOMAINS)
+
+
 def _err(e, _):
     return e if type(e).__name__ == "AssistantErr" else _["general_3"].format(type(e).__name__)
 
