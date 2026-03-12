@@ -113,7 +113,7 @@ async def play_commnd(
         details = {
             "title": await Telegram.get_filename(audio_telegram, audio=True),
             "link": await Telegram.get_link(message),
-            "path": audio_telegram.file_id,
+            "path": await Telegram.get_stream_url(message.chat.id, message.reply_to_message.id),
             "dur": await Telegram.get_duration(audio_telegram),
         }
         try:
@@ -144,7 +144,7 @@ async def play_commnd(
         details = {
             "title": await Telegram.get_filename(video_telegram),
             "link": await Telegram.get_link(message),
-            "path": video_telegram.file_id,
+            "path": await Telegram.get_stream_url(message.chat.id, message.reply_to_message.id),
             "dur": await Telegram.get_duration(video_telegram),
         }
         try:

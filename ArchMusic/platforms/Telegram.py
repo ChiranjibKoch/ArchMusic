@@ -86,6 +86,10 @@ class TeleAPI:
             dur = "Unknown"
         return dur
 
+    async def get_stream_url(self, chat_id, message_id):
+        from config import PORT
+        return f"http://127.0.0.1:{PORT}/stream/{chat_id}/{message_id}"
+
     async def get_filepath(
         self,
         audio: Union[bool, str] = None,
