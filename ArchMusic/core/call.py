@@ -32,6 +32,7 @@ from pytgcalls.exceptions import (
 )
 from ntgcalls import TelegramServerError
 from pytgcalls.types import (
+    Browsers,
     ChatUpdate,
     GroupCallParticipant,
     UpdatedGroupCallParticipant,
@@ -43,6 +44,8 @@ from pytgcalls.types.stream import StreamEnded
 import config
 from strings import get_string
 from ArchMusic import LOGGER, YouTube, app
+
+_DEFAULT_USER_AGENT = Browsers().chrome_windows
 from ArchMusic.misc import db
 from ArchMusic.utils.database import (
     add_active_chat,
@@ -88,10 +91,17 @@ def _build_stream(
     video_quality,
     video: bool = False,
     ffmpeg_params: str = "",
+    headers: dict = None,
 ) -> MediaStream:
     reconnect = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
     combined = f"{reconnect} {ffmpeg_params}".strip()
     kwargs = {"ffmpeg_parameters": combined}
+
+    if headers is None and isinstance(link, str) and link.startswith(("http://", "https://")):
+        headers = {"User-Agent": _DEFAULT_USER_AGENT}
+
+    if headers:
+        kwargs["headers"] = headers
 
     if video:
         return MediaStream(

@@ -18,6 +18,7 @@ import config
 from config import BANNED_USERS
 from ArchMusic import LOGGER, app, userbot
 from ArchMusic.core.call import ArchMusic
+from ArchMusic.core.stream_server import start_stream_server
 from ArchMusic.plugins import ALL_MODULES
 from ArchMusic.utils.database import get_banned_users, get_gbanned
 
@@ -48,6 +49,8 @@ async def init():
         pass
 
     await app.start()
+
+    asyncio.create_task(start_stream_server())
 
     for all_module in ALL_MODULES:
         importlib.import_module("ArchMusic.plugins" + all_module)
